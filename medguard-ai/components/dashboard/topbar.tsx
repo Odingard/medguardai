@@ -35,8 +35,10 @@ export function DashboardTopbar({ user }: DashboardTopbarProps) {
           <span>Search patients, notes, intake forms, and cyber actions...</span>
         </div>
         <div className="ml-auto flex items-center gap-3">
-          <Button variant="ghost" size="icon" aria-label="Notifications">
-            <Bell />
+          <Button variant="ghost" size="icon" aria-label="Notifications" asChild>
+            <Link href="/dashboard#activity">
+              <Bell />
+            </Link>
           </Button>
           <div className="hidden items-center gap-3 rounded-full border bg-card py-1 pl-1 pr-3 shadow-sm sm:flex">
             <Avatar>

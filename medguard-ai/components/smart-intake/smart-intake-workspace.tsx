@@ -625,17 +625,19 @@ export function SmartIntakeWorkspace() {
             )}
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <Button
-                asChild
-                variant={submissionSummary ? "default" : "outline"}
-                disabled={!submissionSummary}
-                onClick={prepareClinicalNoteHandoff}
-              >
-                <Link href={generateDraftClinicalNoteLink()}>
+              {submissionSummary ? (
+                <Button asChild onClick={prepareClinicalNoteHandoff}>
+                  <Link href={generateDraftClinicalNoteLink()}>
+                    <FileText />
+                    Generate Clinical Note
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="outline" disabled>
                   <FileText />
                   Generate Clinical Note
-                </Link>
-              </Button>
+                </Button>
+              )}
               <Button
                 variant="outline"
                 disabled={!submissionSummary}
@@ -699,11 +701,23 @@ export function SmartIntakeWorkspace() {
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          setPortalMessage(`Prepared mock PDF preview for ${intake.patient}.`)
+                        }
+                      >
                         <Eye />
                         View PDF
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          setPortalMessage(`Loaded ${intake.formType} for mock edit workflow.`)
+                        }
+                      >
                         <Edit />
                         Edit
                       </Button>

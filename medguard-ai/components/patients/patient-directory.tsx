@@ -547,11 +547,32 @@ export function PatientDirectory() {
         <CardContent className="flex flex-wrap gap-2">
           {hasTeamSharing ? (
             <>
-              <Button disabled={!selectedPatientIds.length}>Bulk intake</Button>
-              <Button variant="outline" disabled={!selectedPatientIds.length}>
+              <Button
+                disabled={!selectedPatientIds.length}
+                onClick={() =>
+                  setStatusMessage(`Bulk intake queued for ${selectedPatientIds.length} patients.`)
+                }
+              >
+                Bulk intake
+              </Button>
+              <Button
+                variant="outline"
+                disabled={!selectedPatientIds.length}
+                onClick={() =>
+                  setStatusMessage(
+                    `Bulk document generation queued for ${selectedPatientIds.length} patients.`,
+                  )
+                }
+              >
                 Bulk document generation
               </Button>
-              <Button variant="outline" disabled={!selectedPatientIds.length}>
+              <Button
+                variant="outline"
+                disabled={!selectedPatientIds.length}
+                onClick={() =>
+                  setStatusMessage(`Team assignment opened for ${selectedPatientIds.length} patients.`)
+                }
+              >
                 Team assignment
               </Button>
             </>

@@ -884,7 +884,13 @@ export function DataMigrationWizard() {
                         <Badge variant="outline">{entry.status}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button size="sm" variant="outline">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            setReportMessage(`Opened mock migration report for ${entry.source}.`)
+                          }
+                        >
                           <Download />
                           Report
                         </Button>

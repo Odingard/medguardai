@@ -517,7 +517,13 @@ export function CyberHygieneDashboard() {
                       </p>
                     </div>
                   </div>
-                  <Button className="mt-4 w-full" variant="outline">
+                  <Button
+                    className="mt-4 w-full"
+                    variant="outline"
+                    onClick={() =>
+                      setAgentRunMessage(`Created mock remediation task: ${recommendation.title}`)
+                    }
+                  >
                     <CheckCircle2 />
                     Fix Now
                   </Button>

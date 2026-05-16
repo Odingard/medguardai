@@ -637,15 +637,33 @@ export function LegalDocumentsWorkspace() {
                         <Eye />
                         View
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          setStatusMessage(`Mock download prepared for ${document.documentType}.`)
+                        }
+                      >
                         <Download />
                         Download
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          setStatusMessage(`Mock send queued for ${document.patient}.`)
+                        }
+                      >
                         <Send />
                         Send
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          setStatusMessage(`${document.documentType} archived in mock history.`)
+                        }
+                      >
                         <Archive />
                         Archive
                       </Button>

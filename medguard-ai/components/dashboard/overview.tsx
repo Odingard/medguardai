@@ -239,7 +239,7 @@ export function DashboardOverview() {
       <RoiCalculator />
 
       <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card>
+        <Card id="activity">
           <CardHeader>
             <CardTitle>Recent activity across modules</CardTitle>
             <CardDescription>

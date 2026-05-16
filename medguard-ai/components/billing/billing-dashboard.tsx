@@ -62,7 +62,7 @@ export function BillingDashboard() {
       }
 
       if (result.url) {
-        window.location.href = result.url;
+        window.location.assign(result.url);
         return;
       }
 
@@ -89,7 +89,7 @@ export function BillingDashboard() {
       const result = await createCustomerPortalAction();
 
       if (result.url) {
-        window.location.href = result.url;
+        window.location.assign(result.url);
         return;
       }
 

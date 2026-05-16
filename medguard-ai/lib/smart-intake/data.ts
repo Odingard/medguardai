@@ -283,6 +283,105 @@ export const intakeTemplates: IntakeTemplate[] = [
       ...sharedSafetyFields,
     ],
   },
+  {
+    id: "hypertension-follow-up",
+    title: "Hypertension Follow-up",
+    category: "Primary care",
+    description:
+      "Home BP trends, medication adherence, side effects, lifestyle, and labs.",
+    icon: HeartPulse,
+    fields: [
+      {
+        id: "homeBpReadings",
+        label: "Recent home BP readings",
+        type: "textarea",
+        placeholder: "Average readings, highest/lowest, timing...",
+      },
+      {
+        id: "bpMedicationAdherence",
+        label: "Taking BP medications as prescribed?",
+        type: "select",
+        options: ["Yes", "Sometimes missed", "No", "Not sure"],
+      },
+      {
+        id: "bpSideEffects",
+        label: "Medication side effects",
+        type: "textarea",
+        placeholder: "Dizziness, cough, swelling, fatigue...",
+      },
+      ...sharedSafetyFields,
+    ],
+  },
+  {
+    id: "mental-health-screening",
+    title: "Mental Health Screening",
+    category: "Behavioral health",
+    description:
+      "PHQ/GAD-style symptom screen, sleep, function, medication response, and safety.",
+    icon: Stethoscope,
+    fields: [
+      {
+        id: "moodScore",
+        label: "Mood symptoms over the last 2 weeks",
+        type: "select",
+        options: ["None", "Mild", "Moderate", "Severe"],
+      },
+      {
+        id: "anxietyScore",
+        label: "Anxiety symptoms over the last 2 weeks",
+        type: "select",
+        options: ["None", "Mild", "Moderate", "Severe"],
+      },
+      {
+        id: "functionImpact",
+        label: "Impact on work, school, or home life",
+        type: "textarea",
+      },
+      {
+        id: "safetyConcern",
+        label: "Any self-harm or safety concern?",
+        type: "select",
+        options: ["No", "Yes"],
+      },
+      {
+        id: "safetyDetails",
+        label: "Safety details",
+        type: "textarea",
+        showWhen: {
+          fieldId: "safetyConcern",
+          equals: "Yes",
+        },
+      },
+      ...sharedSafetyFields,
+    ],
+  },
+  {
+    id: "dermatology-intake",
+    title: "Dermatology Intake",
+    category: "Specialty-specific",
+    description:
+      "Rash/lesion details, duration, distribution, triggers, photos, and prior treatments.",
+    icon: FileHeart,
+    fields: [
+      {
+        id: "skinConcern",
+        label: "Skin concern description",
+        type: "textarea",
+        required: true,
+      },
+      {
+        id: "skinLocation",
+        label: "Location / distribution",
+        type: "text",
+      },
+      {
+        id: "skinPhotos",
+        label: "Patient has photos available",
+        type: "checkbox",
+      },
+      ...sharedSafetyFields,
+    ],
+  },
 ] as const;
 
 export const completedIntakes = [

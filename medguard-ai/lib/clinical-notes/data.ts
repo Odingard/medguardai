@@ -119,6 +119,62 @@ export const clinicalTemplates: ClinicalTemplate[] = [
     icon: Stethoscope,
     prompt: "Behavioral health follow-up with symptom severity, safety, medications, and therapy plan.",
   },
+  {
+    id: "annual-physical-note",
+    title: "Annual Physical",
+    description: "Preventive care, screenings, immunizations, lifestyle, and labs.",
+    icon: ClipboardList,
+    prompt: "Annual physical: include preventive screenings, immunization status, lifestyle counseling, labs, risk factors, and follow-up plan.",
+  },
+  {
+    id: "post-op-follow-up",
+    title: "Post-Op Follow-up",
+    description: "Procedure recovery, wound status, pain control, restrictions, and complications.",
+    icon: Syringe,
+    prompt: "Post-operative follow-up: document procedure, recovery course, wound/exam findings, pain control, restrictions, complications, and next surgical follow-up.",
+  },
+  {
+    id: "urgent-care-note",
+    title: "Urgent Care",
+    description: "Focused acute complaint note with red flags and return precautions.",
+    icon: Stethoscope,
+    prompt: "Urgent care visit: capture onset, severity, red flags, focused exam, differential, treatment, and return precautions.",
+  },
+  {
+    id: "womens-health",
+    title: "Women's Health",
+    description: "Preventive gynecology, reproductive health, screening, and counseling.",
+    icon: FileHeart,
+    prompt: "Women's health visit: include preventive screening, reproductive history if provided, symptoms, exam/labs if documented, counseling, and follow-up.",
+  },
+  {
+    id: "dermatology-visit",
+    title: "Dermatology",
+    description: "Skin lesion/rash morphology, distribution, procedure, and follow-up.",
+    icon: FileHeart,
+    prompt: "Dermatology visit: include lesion/rash description, location, duration, associated symptoms, treatments tried, procedure details if any, and follow-up.",
+  },
+  {
+    id: "orthopedics-visit",
+    title: "Orthopedics",
+    description: "MSK pain, injury mechanism, imaging, function, and procedure readiness.",
+    icon: Stethoscope,
+    prompt: "Orthopedic visit: include pain location, injury mechanism, functional limits, exam, imaging if documented, assessment, rehab/procedure plan.",
+  },
+  {
+    id: "pediatrics-visit",
+    title: "Pediatrics",
+    description: "Pediatric acute/well visit with guardian context and anticipatory guidance.",
+    icon: ClipboardList,
+    prompt: "Pediatric visit: include guardian-reported history, development/wellness context if provided, immunizations, exam, plan, and parent instructions.",
+  },
+  {
+    id: "psychiatry-follow-up",
+    title: "Psychiatry",
+    description: "Mood, anxiety, medication response, safety screen, and therapy plan.",
+    icon: Stethoscope,
+    prompt: "Psychiatry follow-up: include symptoms, medication response, side effects, sleep, function, safety screen, therapy plan, and follow-up.",
+  },
 ] as const;
 
 export const specialtyTemplates = [

@@ -121,6 +121,7 @@ export function ClinicalNotesWorkspace() {
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     clinicalTemplates[0].id,
   );
+  const [templateSearch, setTemplateSearch] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>(
     specialtyTemplates[0],
   );
@@ -169,6 +170,21 @@ export function ClinicalNotesWorkspace() {
       clinicalTemplates[0],
     [selectedTemplateId],
   );
+
+  const filteredClinicalTemplates = useMemo(() => {
+    const query = templateSearch.trim().toLowerCase();
+
+    if (!query) {
+      return clinicalTemplates;
+    }
+
+    return clinicalTemplates.filter((template) =>
+      [template.title, template.description, template.prompt]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [templateSearch]);
 
   function updateEncounterInput(value: string) {
     setEncounterInput(redactSecrets(value));
@@ -853,8 +869,18 @@ export function ClinicalNotesWorkspace() {
               Quick-start prompt context for common encounters.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            {clinicalTemplates.map((template) => {
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="clinical-template-search">Search templates</Label>
+              <Input
+                id="clinical-template-search"
+                value={templateSearch}
+                onChange={(event) => setTemplateSearch(event.target.value)}
+                placeholder="Search primary care, derm, ortho, telehealth..."
+              />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+            {filteredClinicalTemplates.map((template) => {
               const Icon = template.icon;
               const active = template.id === selectedTemplateId;
 
@@ -883,6 +909,7 @@ export function ClinicalNotesWorkspace() {
                 </button>
               );
             })}
+            </div>
           </CardContent>
         </Card>
       </section>

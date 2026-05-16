@@ -26,32 +26,13 @@ export type ClinicalNoteGenerationResult = {
 
 type AiSoapPayload = SoapNote;
 
-const clinicalNoteSystemPrompt = `You are MedGuard AI, a clinical documentation assistant for licensed medical professionals.
-
-Return only valid JSON with this exact shape:
-{
-  "subjective": "string",
-  "objective": "string",
-  "assessment": "string",
-  "plan": "string",
-  "billingCodes": ["string"],
-  "icdCodes": ["string"],
-  "confidence": {
-    "subjective": number,
-    "objective": number,
-    "assessment": number,
-    "plan": number,
-    "billing": number,
-    "overall": number
-  }
-}
-
-Rules:
-- Create a concise SOAP note from the encounter input.
-- Do not invent facts that are not present. Mark uncertain details as "not documented".
-- Suggested ICD/CPT/E/M codes are draft suggestions for provider review, not billing advice.
-- Keep medical language professional and accurate.
-- Confidence scores must be integers from 0 to 100.`;
+import {
+  clinicalQuestionPrompt,
+  clinicalSoapSystemPrompt,
+  magicEditPrompt,
+  patientInstructionsPrompt,
+  referralLetterPrompt,
+} from "@/lib/ai-prompts";
 
 function getMockResult(input: ClinicalNoteGenerationInput): ClinicalNoteGenerationResult {
   return {
@@ -128,10 +109,10 @@ async function generateWithOpenAI(
 
   const completion = await client.chat.completions.create({
     model,
-    temperature: 0.2,
+    temperature: 0,
     response_format: { type: "json_object" },
     messages: [
-      { role: "system", content: clinicalNoteSystemPrompt },
+      { role: "system", content: clinicalSoapSystemPrompt },
       { role: "user", content: buildUserPrompt(input) },
     ],
   });
@@ -160,8 +141,8 @@ async function generateWithAnthropic(
   const message = await client.messages.create({
     model,
     max_tokens: 1800,
-    temperature: 0.2,
-    system: clinicalNoteSystemPrompt,
+    temperature: 0,
+    system: clinicalSoapSystemPrompt,
     messages: [{ role: "user", content: buildUserPrompt(input) }],
   });
 
@@ -232,6 +213,23 @@ function formatNoteForPrompt(note?: SoapNote | null) {
   ].join("\n");
 }
 
+
+function getClinicalTextSystemPrompt(task: string) {
+  if (task.includes("patient instructions")) {
+    return patientInstructionsPrompt;
+  }
+
+  if (task.includes("referral letter")) {
+    return referralLetterPrompt;
+  }
+
+  if (task.includes("clinical question")) {
+    return clinicalQuestionPrompt;
+  }
+
+  return magicEditPrompt;
+}
+
 async function generateClinicalText({
   input,
   task,
@@ -255,12 +253,11 @@ async function generateClinicalText({
       const model = process.env.OPENAI_MODEL || "gpt-4o";
       const completion = await client.chat.completions.create({
         model,
-        temperature: 0.2,
+        temperature: 0,
         messages: [
           {
             role: "system",
-            content:
-              "You are MedGuard AI. Produce concise, medically careful clinical text for provider review. Do not invent facts.",
+            content: getClinicalTextSystemPrompt(task),
           },
           { role: "user", content: prompt },
         ],
@@ -279,9 +276,8 @@ async function generateClinicalText({
       const message = await client.messages.create({
         model,
         max_tokens: 1200,
-        temperature: 0.2,
-        system:
-          "You are MedGuard AI. Produce concise, medically careful clinical text for provider review. Do not invent facts.",
+        temperature: 0,
+        system: getClinicalTextSystemPrompt(task),
         messages: [{ role: "user", content: prompt }],
       });
 

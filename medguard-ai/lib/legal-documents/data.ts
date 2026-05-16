@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import type { MockPatient } from "@/lib/clinical-notes/data";
+import { legalDocumentPrompt } from "@/lib/ai-prompts";
 
 export type LegalDocumentStatus = "Draft" | "Signed" | "Sent" | "Archived";
 
@@ -106,6 +107,45 @@ export const legalDocumentTemplates: LegalDocumentTemplate[] = [
     defaultClauses: [
       "Custom terms should be reviewed by qualified legal counsel before final use.",
       "Practice-specific details, state requirements, and patient context should be verified.",
+    ],
+  },
+  {
+    id: "texas-minor-consent",
+    title: "Texas Minor Consent / Guardian Authorization",
+    category: "Texas-specific",
+    description:
+      "Guardian authorization template for minor treatment workflows and responsible party acknowledgement.",
+    icon: FileCheck2,
+    defaultClauses: [
+      "Guardian or responsible party authorizes evaluation and treatment for the named minor.",
+      "Practice should verify identity, custody/authority, and emergency contact information.",
+      "Legal counsel should review state-specific requirements before use.",
+    ],
+  },
+  {
+    id: "financial-responsibility",
+    title: "Financial Responsibility Agreement",
+    category: "Practice operations",
+    description:
+      "Patient acknowledgement for payment responsibility, insurance assignment, and billing policies.",
+    icon: FileText,
+    defaultClauses: [
+      "Patient acknowledges responsibility for charges not covered by insurance.",
+      "Patient authorizes insurance assignment and billing communication when applicable.",
+      "Practice policies for cancellations, copays, and balances should be completed before use.",
+    ],
+  },
+  {
+    id: "roi-telehealth-photo-release",
+    title: "Telehealth + Photo Permission Addendum",
+    category: "Care delivery",
+    description:
+      "Addendum for telehealth care, patient-submitted images, and photography permission workflows.",
+    icon: HeartHandshake,
+    defaultClauses: [
+      "Patient consents to telehealth evaluation when clinically appropriate.",
+      "Patient authorizes use of submitted images for care documentation as specified.",
+      "Patient understands image quality and remote care limitations may require in-person evaluation.",
     ],
   },
 ] as const;
@@ -223,6 +263,7 @@ export function buildCustomLegalTemplate(prompt: string): LegalDocumentTemplate 
       "AI-generated legal-medical document tailored to the practice request.",
     icon: Signature,
     defaultClauses: [
+      legalDocumentPrompt,
       "Parties acknowledge the document is generated from practice-provided instructions.",
       telehealthFocused
         ? "Patient consents to telehealth care, remote communication, and documented media permissions as specified."

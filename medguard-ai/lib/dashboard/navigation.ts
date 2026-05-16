@@ -12,21 +12,25 @@ export const dashboardNavigation = [
     title: "Overview",
     href: "/dashboard",
     icon: LayoutDashboard,
+    featured: false,
   },
   {
     title: "Clinical Notes",
     href: "/dashboard/clinical-notes",
     icon: FileHeart,
+    featured: false,
   },
   {
     title: "Smart Intake",
     href: "/dashboard/smart-intake",
     icon: ClipboardCheck,
+    featured: false,
   },
   {
     title: "Legal Documents",
     href: "/dashboard/legal-documents",
     icon: FileText,
+    featured: false,
   },
   {
     title: "Cyber Hygiene",
@@ -38,5 +42,6 @@ export const dashboardNavigation = [
     title: "Data Migration",
     href: "/dashboard/data-migration",
     icon: DatabaseZap,
+    featured: false,
   },
 ] as const;

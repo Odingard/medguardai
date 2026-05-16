@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { usePatientStore } from "@/lib/stores/patientStore";
+import { useSubscriptionStore } from "@/lib/stores/subscriptionStore";
 
 const patientModuleLinks = [
   {
@@ -50,6 +51,9 @@ const patientModuleLinks = [
 export function PatientDirectory() {
   const { patients, currentPatientId, recentPatientIds, setCurrentPatient } =
     usePatientStore();
+  const hasTeamSharing = useSubscriptionStore((state) =>
+    state.hasFeature("teamSharing"),
+  );
   const [searchQuery, setSearchQuery] = useState("");
 
   const recentPatients = useMemo(
@@ -122,6 +126,23 @@ export function PatientDirectory() {
           </div>
         </CardContent>
       </Card>
+
+      {!hasTeamSharing ? (
+        <Card className="border-amber-300 bg-amber-50/70 dark:border-amber-900 dark:bg-amber-950/20">
+          <CardHeader>
+            <CardTitle>Team sharing locked</CardTitle>
+            <CardDescription>
+              SMB / Group unlocks team sharing, multi-provider analytics,
+              admin dashboard workflows, and bulk patient actions.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="/dashboard/billing">Upgrade to SMB</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <section className="grid gap-4 lg:grid-cols-2">
         {filteredPatients.map((patient) => {

@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   CheckCircle2,
   Clock3,
+  Lock,
   Play,
   RefreshCw,
   Shield,
@@ -49,6 +50,7 @@ import {
   type AlertSeverity,
   type RiskLevel,
 } from "@/lib/cyber-hygiene/data";
+import { useSubscriptionStore } from "@/lib/stores/subscriptionStore";
 import { cn } from "@/lib/utils";
 
 const severityStyles: Record<AlertSeverity, string> = {
@@ -67,6 +69,9 @@ const metricStyles: Record<RiskLevel, string> = {
 };
 
 export function CyberHygieneDashboard() {
+  const hasAdvancedCyber = useSubscriptionStore((state) =>
+    state.hasFeature("advancedCyber"),
+  );
   const [lastScanned, setLastScanned] = useState(cyberRiskScore.lastScanned);
   const [scanMessage, setScanMessage] = useState(cyberRiskScore.summary);
   const [runningAgent, setRunningAgent] = useState<AgentId | null>(null);
@@ -262,6 +267,11 @@ export function CyberHygieneDashboard() {
             {cyberAgents.map((agent) => {
               const Icon = agent.icon;
               const isRunning = runningAgent === agent.id;
+              const isAdvancedAgent = [
+                "phishing-simulation-runner",
+                "weekly-compliance-report-generator",
+              ].includes(agent.id);
+              const locked = isAdvancedAgent && !hasAdvancedCyber;
 
               return (
                 <div
@@ -276,6 +286,7 @@ export function CyberHygieneDashboard() {
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-semibold">{agent.name}</h3>
                         <Badge variant="outline">{agent.cadence}</Badge>
+                        {locked ? <Badge variant="outline">Premium+</Badge> : null}
                       </div>
                       <p className="mt-1 text-sm leading-6 text-muted-foreground">
                         {agent.description}
@@ -291,6 +302,7 @@ export function CyberHygieneDashboard() {
                   <div className="flex items-center gap-3 md:justify-end">
                     <Switch
                       checked={agentToggles[agent.id]}
+                      disabled={locked}
                       onCheckedChange={(checked) =>
                         setAgentToggles((current) => ({
                           ...current,
@@ -303,18 +315,27 @@ export function CyberHygieneDashboard() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleRunAgent(agent.id, agent.name)}
+                      disabled={locked}
                     >
-                      {isRunning ? (
+                      {locked ? (
+                        <Lock />
+                      ) : isRunning ? (
                         <RefreshCw className="animate-spin" />
                       ) : (
                         <Play />
                       )}
-                      Run Agent
+                      {locked ? "Upgrade" : "Run Agent"}
                     </Button>
                   </div>
                 </div>
               );
             })}
+            {!hasAdvancedCyber ? (
+              <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+                Advanced Agentic Cyber agents require Premium or SMB. Upgrade in
+                Billing to unlock phishing simulations and weekly compliance reports.
+              </div>
+            ) : null}
             <div className="rounded-xl border bg-muted/40 p-4 text-sm text-muted-foreground">
               {agentRunMessage}
             </div>

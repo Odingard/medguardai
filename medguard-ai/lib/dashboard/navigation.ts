@@ -3,6 +3,7 @@ import {
   DatabaseZap,
   FileHeart,
   FileText,
+  CreditCard,
   LayoutDashboard,
   ShieldCheck,
   UsersRound,
@@ -49,6 +50,12 @@ export const dashboardNavigation = [
     title: "Data Migration",
     href: "/dashboard/data-migration",
     icon: DatabaseZap,
+    featured: false,
+  },
+  {
+    title: "Billing",
+    href: "/dashboard/billing",
+    icon: CreditCard,
     featured: false,
   },
 ] as const;

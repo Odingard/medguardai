@@ -22,10 +22,14 @@ import {
 } from "@/lib/dashboard/overview-data";
 import { cyberRiskScore } from "@/lib/cyber-hygiene/data";
 import { usePatientStore } from "@/lib/stores/patientStore";
+import { useSubscriptionStore } from "@/lib/stores/subscriptionStore";
 import { cn } from "@/lib/utils";
 
 export function DashboardOverview() {
   const { patients, currentPatientId } = usePatientStore();
+  const hasAdvancedAnalytics = useSubscriptionStore((state) =>
+    state.hasFeature("advancedAnalytics"),
+  );
   const currentPatient =
     patients.find((patient) => patient.id === currentPatientId) ?? patients[0];
 
@@ -245,10 +249,17 @@ export function DashboardOverview() {
                   Shared patient state, module handoffs, connected activity,
                   and a patient directory are in place for internal testing.
                 </p>
-                <p>
-                  Next polish can add Stripe subscriptions, real AI calls, and
-                  durable Supabase-backed patient records.
-                </p>
+                {hasAdvancedAnalytics ? (
+                  <p>
+                    Advanced analytics are unlocked. Next polish can connect
+                    durable Supabase-backed patient records and live ROI charts.
+                  </p>
+                ) : (
+                  <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+                    Advanced analytics / ROI dashboard requires Premium or SMB.
+                    Visit Billing to unlock revenue and productivity reporting.
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>

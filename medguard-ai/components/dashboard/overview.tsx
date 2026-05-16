@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, ShieldAlert, Sparkles, UsersRound } from "lucide-react";
 
@@ -30,6 +31,7 @@ import { useSubscriptionStore } from "@/lib/stores/subscriptionStore";
 import { cn } from "@/lib/utils";
 
 export function DashboardOverview() {
+  const [subscriptionMounted, setSubscriptionMounted] = useState(false);
   const { patients, currentPatientId, prepareClinicalNoteHandoff } = usePatientStore();
   const restartOnboarding = useOnboardingStore((state) => state.restartOnboarding);
   const hasAdvancedAnalytics = useSubscriptionStore((state) =>
@@ -38,6 +40,11 @@ export function DashboardOverview() {
   const currentPatient =
     patients.find((patient) => patient.id === currentPatientId) ?? patients[0];
   const visitPrep = getPatientCommandMetrics(currentPatient).visitPrep;
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setSubscriptionMounted(true), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   function startVisitFromPrep() {
     prepareClinicalNoteHandoff({
@@ -296,7 +303,7 @@ export function DashboardOverview() {
                   Shared patient state, module handoffs, connected activity,
                   and a patient directory are in place for internal testing.
                 </p>
-                {hasAdvancedAnalytics ? (
+                {subscriptionMounted && hasAdvancedAnalytics ? (
                   <p>
                     Advanced analytics are unlocked. Next polish can connect
                     durable Supabase-backed patient records and live ROI charts.

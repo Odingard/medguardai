@@ -236,7 +236,12 @@ export function ClinicalNotesWorkspace() {
     try {
       const result = await generateClinicalSoapNoteAction({
         patient: selectedPatient,
-        template: selectedTemplate,
+        template: {
+          id: selectedTemplate.id,
+          title: selectedTemplate.title,
+          description: selectedTemplate.description,
+          prompt: selectedTemplate.prompt,
+        },
         specialty: selectedSpecialty,
         encounterInput,
       });

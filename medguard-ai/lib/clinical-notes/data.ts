@@ -151,7 +151,7 @@ export function generateMockSoapNote({
   input,
 }: {
   patient: MockPatient;
-  template: ClinicalTemplate;
+  template: Pick<ClinicalTemplate, "title">;
   input: string;
 }): SoapNote {
   const source =

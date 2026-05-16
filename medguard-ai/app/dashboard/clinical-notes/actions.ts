@@ -8,7 +8,7 @@ import type {
 
 export async function generateClinicalSoapNoteAction(input: {
   patient: MockPatient;
-  template: ClinicalTemplate;
+  template: Pick<ClinicalTemplate, "id" | "title" | "description" | "prompt">;
   specialty: string;
   encounterInput: string;
 }) {

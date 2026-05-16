@@ -12,7 +12,7 @@ import {
 
 export type ClinicalNoteGenerationInput = {
   patient: MockPatient;
-  template: ClinicalTemplate;
+  template: Pick<ClinicalTemplate, "id" | "title" | "description" | "prompt">;
   specialty: string;
   encounterInput: string;
 };

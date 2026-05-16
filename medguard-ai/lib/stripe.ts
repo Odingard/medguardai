@@ -10,7 +10,7 @@ export function getStripe() {
   }
 
   return new Stripe(stripeSecretKey, {
-    apiVersion: "2025-11-17.clover",
+    apiVersion: "2026-04-22.dahlia",
     appInfo: {
       name: "MedGuard AI",
       version: "0.1.0",

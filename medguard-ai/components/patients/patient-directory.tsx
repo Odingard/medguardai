@@ -68,25 +68,25 @@ type FilterMode = "all" | "active" | "last-visit" | "risk";
 const moduleActions = [
   {
     label: "Open Clinical Notes",
-    href: "/dashboard/clinical-notes",
+    anchor: "patient-clinical-notes",
     icon: FileHeart,
     action: "clinical" as const,
   },
   {
     label: "New Smart Intake",
-    href: "/dashboard/smart-intake",
+    anchor: "patient-smart-intake",
     icon: ClipboardCheck,
     action: "intake" as const,
   },
   {
     label: "Generate Legal Document",
-    href: "/dashboard/legal-documents",
+    anchor: "patient-legal-documents",
     icon: FileText,
     action: "legal" as const,
   },
   {
     label: "Migrate More Data",
-    href: "/dashboard/data-migration",
+    anchor: "patient-data-migration",
     icon: DatabaseZap,
     action: "migration" as const,
   },
@@ -270,7 +270,7 @@ export function PatientDirectory() {
 
           return (
             <Button
-              key={action.href}
+              key={action.anchor}
               variant="outline"
               size="sm"
               asChild
@@ -279,7 +279,7 @@ export function PatientDirectory() {
                 preparePatientAction(patient, action.action);
               }}
             >
-              <Link href={action.href}>
+              <Link href={`/dashboard/patient/${patient.id}#${action.anchor}`}>
                 <Icon />
                 {action.label}
               </Link>
@@ -359,7 +359,7 @@ export function PatientDirectory() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-semibold">Visit Prep</p>
                     <Button size="sm" asChild onClick={() => prepareVisitPrepHandoff(profilePatient)}>
-                      <Link href="/dashboard/clinical-notes">Start Visit</Link>
+                      <Link href={`/dashboard/patient/${profilePatient.id}#patient-clinical-notes`}>Start Visit</Link>
                     </Button>
                   </div>
                   <p className="mt-1 text-muted-foreground">{metrics.visitPrep.summary}</p>
@@ -395,7 +395,7 @@ export function PatientDirectory() {
                   {metrics.recentNotes.map((note) => (
                     <Link
                       key={note.id}
-                      href="/dashboard/clinical-notes"
+                      href={`/dashboard/patient/${profilePatient.id}#patient-clinical-notes`}
                       onClick={() => preparePatientAction(profilePatient, "clinical")}
                       className="block rounded-xl border bg-card p-3 transition-colors hover:bg-muted/50"
                     >
@@ -416,7 +416,7 @@ export function PatientDirectory() {
                     {metrics.recentIntakes.map((intake) => (
                       <Link
                         key={intake.id}
-                        href="/dashboard/smart-intake"
+                        href={`/dashboard/patient/${profilePatient.id}#patient-smart-intake`}
                         onClick={() => setCurrentPatient(profilePatient.id)}
                         className="block rounded-lg border p-3 text-sm hover:bg-muted/50"
                       >
@@ -429,7 +429,7 @@ export function PatientDirectory() {
                     {metrics.legalDocuments.map((document) => (
                       <Link
                         key={document.id}
-                        href="/dashboard/legal-documents"
+                        href={`/dashboard/patient/${profilePatient.id}#patient-legal-documents`}
                         onClick={() => setCurrentPatient(profilePatient.id)}
                         className="block rounded-lg border p-3 text-sm hover:bg-muted/50"
                       >

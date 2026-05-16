@@ -3,7 +3,7 @@
 }
 
 body {
-  width: 340px;
+  width: 360px;
   margin: 0;
   background: #f8fafc;
   color: #0f172a;
@@ -68,6 +68,10 @@ h1 {
   font-weight: 700;
   margin-bottom: 10px;
   padding: 4px 9px;
+}
+
+.source {
+  margin-top: 8px;
 }
 
 .primary-button,

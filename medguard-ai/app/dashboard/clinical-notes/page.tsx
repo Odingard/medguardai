@@ -1,4 +1,8 @@
+import Link from "next/link";
+import { Puzzle } from "lucide-react";
+
 import { ClinicalNotesWorkspace } from "@/components/clinical-notes/clinical-notes-workspace";
+import { Button } from "@/components/ui/button";
 
 export default function ClinicalNotesPage() {
   return (
@@ -17,6 +21,12 @@ export default function ClinicalNotesPage() {
             chart in under a minute.
           </p>
         </div>
+        <Button variant="outline" asChild>
+          <Link href="/dashboard/billing#chrome-extension">
+            <Puzzle />
+            Install Chrome Extension
+          </Link>
+        </Button>
       </div>
       <ClinicalNotesWorkspace />
     </div>

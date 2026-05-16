@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "MedGuard AI EHR Push",
+  "description": "Push MedGuard AI patient context and SOAP notes into supported EHR workflows.",
+  "version": "0.1.0",
+  "minimum_chrome_version": "116",
+  "action": {
+    "default_title": "MedGuard AI",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.epic.com/*",
+        "https://*.epiccarelink.com/*",
+        "https://*.athenahealth.com/*",
+        "https://*.eclinicalworks.com/*",
+        "https://*.ecwcloud.com/*",
+        "https://*.practicefusion.com/*",
+        "https://*.nextgen.com/*",
+        "https://*.cerner.com/*",
+        "https://*.oraclecloud.com/*"
+      ],
+      "js": ["content-script.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": ["activeTab", "clipboardWrite", "scripting", "storage"],
+  "host_permissions": [
+    "https://*.epic.com/*",
+    "https://*.epiccarelink.com/*",
+    "https://*.athenahealth.com/*",
+    "https://*.eclinicalworks.com/*",
+    "https://*.ecwcloud.com/*",
+    "https://*.practicefusion.com/*",
+    "https://*.nextgen.com/*",
+    "https://*.cerner.com/*",
+    "https://*.oraclecloud.com/*"
+  ],
+  "options_page": "options.html"
+}

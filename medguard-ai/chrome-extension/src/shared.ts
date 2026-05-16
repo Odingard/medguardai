@@ -1,0 +1,249 @@
+export type SupportedEhr = {
+  id: string;
+  name: string;
+  hostPatterns: string[];
+};
+
+export type MedGuardPatient = {
+  id?: string;
+  name: string;
+  dob: string;
+  reason: string;
+};
+
+export type MedGuardSoapNote = {
+  title: string;
+  subjective: string;
+  objective: string;
+  assessment: string;
+  plan: string;
+  billingCodes: string[];
+  icdCodes: string[];
+};
+
+export type MedGuardPushPayload = {
+  patient: MedGuardPatient;
+  latestNote: MedGuardSoapNote;
+};
+
+export type ExtensionSettings = {
+  medguardAppUrl: string;
+  medguardAuthToken: string;
+};
+
+export const MEDGUARD_DEFAULT_APP_URL = "http://localhost:3000";
+
+export const SUPPORTED_EHRS: SupportedEhr[] = [
+  {
+    id: "epic",
+    name: "Epic / EpicCare Link",
+    hostPatterns: ["epic.com", "epiccarelink.com"],
+  },
+  {
+    id: "athena",
+    name: "athenahealth",
+    hostPatterns: ["athenahealth.com"],
+  },
+  {
+    id: "ecw",
+    name: "eClinicalWorks",
+    hostPatterns: ["eclinicalworks.com", "ecwcloud.com"],
+  },
+  {
+    id: "practice-fusion",
+    name: "Practice Fusion",
+    hostPatterns: ["practicefusion.com"],
+  },
+  {
+    id: "nextgen",
+    name: "NextGen",
+    hostPatterns: ["nextgen.com"],
+  },
+  {
+    id: "cerner",
+    name: "Cerner / Oracle Health",
+    hostPatterns: ["cerner.com", "oraclecloud.com"],
+  },
+];
+
+export const demoPayload: MedGuardPushPayload = {
+  patient: {
+    id: "pat-001",
+    name: "Elena Ramirez",
+    dob: "02/18/1972",
+    reason: "Hypertension follow-up",
+  },
+  latestNote: {
+    title: "SOAP Note - Hypertension Follow-up",
+    subjective:
+      "Patient reports blood pressure has been better controlled at home and denies chest pain, shortness of breath, dizziness, or medication side effects.",
+    objective:
+      "Alert, oriented, no acute distress. Home BP averages around 128/78 per patient report.",
+    assessment:
+      "Hypertension, controlled on current therapy. Medication tolerated without reported side effects.",
+    plan:
+      "Continue lisinopril. Repeat BMP. Reinforce low-sodium diet and walking. Follow up in 3 months.",
+    billingCodes: ["99213", "G2211"],
+    icdCodes: ["I10", "Z79.899"],
+  },
+};
+
+export function detectEhr(hostname: string) {
+  const normalizedHost = hostname.toLowerCase();
+
+  return (
+    SUPPORTED_EHRS.find((ehr) =>
+      ehr.hostPatterns.some((pattern) => normalizedHost.includes(pattern)),
+    ) ?? null
+  );
+}
+
+export type EhrNoteTemplate = "soap" | "compact" | "epic";
+
+export const EHR_NOTE_TEMPLATES: Array<{
+  id: EhrNoteTemplate;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "soap",
+    label: "Structured SOAP",
+    description: "Full sectioned SOAP note for general EHR paste.",
+  },
+  {
+    id: "compact",
+    label: "Compact Scribe Note",
+    description: "Shorter sign-off format for fast charting.",
+  },
+  {
+    id: "epic",
+    label: "Epic-style Progress Note",
+    description: "Problem-oriented format with assessment/plan emphasis.",
+  },
+];
+
+export function formatSoapForEhr(
+  payload: MedGuardPushPayload = demoPayload,
+  template: EhrNoteTemplate = "soap",
+) {
+  const { patient, latestNote } = payload;
+
+  if (template === "compact") {
+    return [
+      `MedGuard AI Note - ${patient.name} (${patient.dob})`,
+      `Reason: ${patient.reason}`,
+      "",
+      `S: ${latestNote.subjective}`,
+      `O: ${latestNote.objective}`,
+      `A: ${latestNote.assessment}`,
+      `P: ${latestNote.plan}`,
+      "",
+      `Codes: ${latestNote.billingCodes.join(", ")} | ICD-10: ${latestNote.icdCodes.join(", ")}`,
+      "Review before signing.",
+    ].join("\n");
+  }
+
+  if (template === "epic") {
+    return [
+      "==== MEDGUARD AI PROGRESS NOTE ====",
+      `Patient: ${patient.name} | DOB: ${patient.dob}`,
+      `Visit context: ${patient.reason}`,
+      "",
+      "HPI / SUBJECTIVE",
+      latestNote.subjective,
+      "",
+      "EXAM / OBJECTIVE",
+      latestNote.objective,
+      "",
+      "ASSESSMENT & PLAN",
+      `${latestNote.assessment} ${latestNote.plan}`,
+      "",
+      `Suggested E/M/CPT: ${latestNote.billingCodes.join(", ")}`,
+      `Suggested ICD-10: ${latestNote.icdCodes.join(", ")}`,
+      "Review before signing.",
+    ].join("\n");
+  }
+
+  return [
+    "==== MEDGUARD AI EHR PUSH ====",
+    "Template alignment: Paste into the EHR note body, then verify each SOAP section maps to the correct EHR fields before signing.",
+    "Injection mode: Generic textarea/contenteditable adapter with clipboard fallback.",
+    "",
+    `Patient: ${patient.name}`,
+    `DOB: ${patient.dob}`,
+    `Context: ${patient.reason}`,
+    `Note: ${latestNote.title}`,
+    "",
+    "[SUBJECTIVE]",
+    latestNote.subjective,
+    "",
+    "[OBJECTIVE]",
+    latestNote.objective,
+    "",
+    "[ASSESSMENT]",
+    latestNote.assessment,
+    "",
+    "[PLAN]",
+    latestNote.plan,
+    "",
+    `[SUGGESTED E/M/CPT] ${latestNote.billingCodes.join(", ")}`,
+    `[SUGGESTED ICD-10] ${latestNote.icdCodes.join(", ")}`,
+    "",
+    "Generated by MedGuard AI. Clinician must review before signing.",
+  ].join("\n");
+}
+
+export async function getExtensionSettings(): Promise<ExtensionSettings> {
+  const settings = await chrome.storage.sync.get([
+    "medguardAppUrl",
+    "medguardAuthToken",
+  ]);
+
+  return {
+    medguardAppUrl:
+      typeof settings.medguardAppUrl === "string"
+        ? settings.medguardAppUrl
+        : MEDGUARD_DEFAULT_APP_URL,
+    medguardAuthToken:
+      typeof settings.medguardAuthToken === "string"
+        ? settings.medguardAuthToken
+        : "",
+  };
+}
+
+export async function fetchLatestNotePayload() {
+  const settings = await getExtensionSettings();
+
+  if (!settings.medguardAuthToken) {
+    return {
+      payload: demoPayload,
+      formatted: formatSoapForEhr(demoPayload),
+      source: "demo",
+    };
+  }
+
+  try {
+    const response = await fetch(`${settings.medguardAppUrl}/api/extension/latest-note`, {
+      headers: {
+        Authorization: `Bearer ${settings.medguardAuthToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`MedGuard API returned ${response.status}`);
+    }
+
+    const payload = (await response.json()) as MedGuardPushPayload;
+    return {
+      payload,
+      formatted: formatSoapForEhr(payload),
+      source: "api",
+    };
+  } catch {
+    return {
+      payload: demoPayload,
+      formatted: formatSoapForEhr(demoPayload),
+      source: "demo",
+    };
+  }
+}

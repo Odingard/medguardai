@@ -98,6 +98,8 @@ export function PatientDirectory() {
     patients,
     currentPatientId,
     recentPatientIds,
+    patientWorkspaceOpen,
+    closePatientWorkspace,
     setCurrentPatient,
     prepareClinicalNoteHandoff,
   } = usePatientStore();
@@ -299,6 +301,9 @@ export function PatientDirectory() {
     );
   }
 
+  const workspacePatient =
+    patients.find((patient) => patient.id === currentPatientId) ?? patients[0];
+
   function renderProfileDialog() {
     if (!profilePatient) {
       return null;
@@ -458,6 +463,33 @@ export function PatientDirectory() {
           </div>
         </DialogContent>
       </Dialog>
+    );
+  }
+
+  if (patientWorkspaceOpen && workspacePatient) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-primary/20 bg-[linear-gradient(135deg,_hsl(var(--card)),_hsl(var(--secondary)))]">
+          <CardHeader>
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge variant="success">Patient Workspace Active</Badge>
+              <Badge variant="outline">{workspacePatient.name}</Badge>
+            </div>
+            <CardTitle className="text-3xl">{workspacePatient.name}&apos;s chart is open</CardTitle>
+            <CardDescription>
+              The Patients tab is not showing the all-patient table because you are inside a patient workspace.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3">
+            <Button asChild>
+              <Link href={`/dashboard/patient/${workspacePatient.id}`}>Return to patient workspace</Link>
+            </Button>
+            <Button variant="outline" onClick={closePatientWorkspace}>
+              Close Patient / Show All Patients
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 

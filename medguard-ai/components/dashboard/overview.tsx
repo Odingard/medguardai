@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, ShieldAlert, Sparkles, UsersRound } from "lucide-react";
+import { ArrowUpRight, FlaskConical, ShieldAlert, UsersRound } from "lucide-react";
 
 import { OnboardingTour } from "@/components/onboarding/onboarding-tour";
-import { RoiCalculator } from "@/components/roi/roi-calculator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,130 +14,59 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cyberReadinessSignals } from "@/lib/dashboard/mock-data";
-import {
-  connectedOverviewStats,
-  connectedRecentActivity,
-  dashboardQuickActions,
-} from "@/lib/dashboard/overview-data";
 import { cyberRiskScore } from "@/lib/cyber-hygiene/data";
-import { getPatientCommandMetrics } from "@/lib/patients/command-center";
-import { useOnboardingStore } from "@/lib/stores/onboardingStore";
+import { cyberReadinessSignals } from "@/lib/dashboard/mock-data";
+import { pendingLabs } from "@/lib/dashboard/labs";
+import { getPatientCommandMetrics, getRiskBadgeClass } from "@/lib/patients/command-center";
 import { usePatientStore } from "@/lib/stores/patientStore";
-import { useSubscriptionStore } from "@/lib/stores/subscriptionStore";
-import { cn } from "@/lib/utils";
 
 export function DashboardOverview() {
-  const [subscriptionMounted, setSubscriptionMounted] = useState(false);
-  const { patients, currentPatientId, prepareClinicalNoteHandoff } = usePatientStore();
-  const restartOnboarding = useOnboardingStore((state) => state.restartOnboarding);
-  const hasAdvancedAnalytics = useSubscriptionStore((state) =>
-    state.hasFeature("advancedAnalytics"),
-  );
+  const { patients, currentPatientId, openPatientWorkspace } = usePatientStore();
+  const assignedPatients = patients.slice(0, 5);
   const currentPatient =
     patients.find((patient) => patient.id === currentPatientId) ?? patients[0];
-  const visitPrep = getPatientCommandMetrics(currentPatient).visitPrep;
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setSubscriptionMounted(true), 0);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
-
-  function startVisitFromPrep() {
-    prepareClinicalNoteHandoff({
-      patientId: currentPatient.id,
-      source: "patient-directory",
-      prefill: [
-        `Visit Prep for ${currentPatient.name}`,
-        visitPrep.summary,
-        "",
-        `Medications: ${visitPrep.medications.join(", ")}`,
-        `Allergies: ${visitPrep.allergies.join(", ")}`,
-        `Pending items: ${visitPrep.pendingItems.join("; ")}`,
-        `Suggested talking points: ${visitPrep.talkingPoints.join("; ")}`,
-        `Cyber/compliance flags: ${visitPrep.cyberComplianceFlags.join("; ")}`,
-      ].join("\n"),
-    });
-  }
 
   return (
     <div className="space-y-8">
       <OnboardingTour />
-      <section className="grid gap-4 xl:grid-cols-[1.8fr_1fr]">
-        <Card className="overflow-hidden border-primary/10 bg-[linear-gradient(135deg,_hsl(var(--card)),_hsl(var(--secondary)))]">
-          <CardHeader className="pb-4">
+      <section className="grid gap-4 xl:grid-cols-[1fr_0.85fr]">
+        <Card className="border-primary/20 bg-[linear-gradient(135deg,_hsl(var(--card)),_hsl(var(--secondary)))]">
+          <CardHeader>
             <div className="flex flex-wrap items-center gap-3">
-              <Badge variant="success">Connected MedGuard OS</Badge>
-              <Badge variant="outline">Five-module MVP</Badge>
+              <Badge variant="success">Provider command center</Badge>
+              <Badge variant="outline">Focused daily view</Badge>
             </div>
-            <div className="space-y-3 pt-4">
-              <CardTitle className="max-w-3xl text-3xl tracking-tight sm:text-4xl">
-                One dashboard for intake, notes, legal workflows, cyber posture,
-                and legacy data import.
-              </CardTitle>
-              <CardDescription className="max-w-2xl text-base leading-7">
-                The modules now share patient context and handoffs, so completed
-                intake and imported records can flow directly into Clinical
-                Notes while legal and cyber workflows stay connected to the same
-                practice command center.
-              </CardDescription>
-            </div>
+            <CardTitle className="text-3xl">
+              Today: patients, labs, and cyber posture.
+            </CardTitle>
+            <CardDescription className="max-w-3xl text-base leading-7">
+              This overview is intentionally focused: see who is assigned to you,
+              which labs need review, and whether practice cyber hygiene needs attention.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-xl border bg-card/70 p-4 text-sm">
-              <p className="font-semibold">Visit Prep: {currentPatient.name}</p>
-              <p className="mt-1 text-muted-foreground">{visitPrep.summary}</p>
-              <div className="mt-3 grid gap-2 md:grid-cols-3">
-                <div>
-                  <p className="font-medium">Medications / Allergies</p>
-                  <p className="text-muted-foreground">{visitPrep.medications.join(", ")} · Allergies: {visitPrep.allergies.join(", ")}</p>
-                </div>
-                <div>
-                  <p className="font-medium">Talking points</p>
-                  <p className="text-muted-foreground">{visitPrep.talkingPoints[0]}</p>
-                </div>
-                <div>
-                  <p className="font-medium">Cyber / Compliance</p>
-                  <p className="text-muted-foreground">{visitPrep.cyberComplianceFlags[0]}</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild>
-                <Link href="/dashboard/patients">
-                  Open patient directory
-                  <UsersRound />
-                </Link>
-              </Button>
-              <Button asChild onClick={startVisitFromPrep}>
-                <Link href="/dashboard/clinical-notes">
-                  Start Visit
-                  <ArrowUpRight />
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href="/dashboard/smart-intake">
-                  Start intake-to-note flow
-                  <ArrowUpRight />
-                </Link>
-              </Button>
-              <Button variant="ghost" onClick={restartOnboarding}>
-                Restart tour
-              </Button>
-            </div>
+          <CardContent className="rounded-xl border bg-card/70 p-4 text-sm">
+            <p className="font-semibold">Current Patient: {currentPatient.name}</p>
+            <p className="mt-1 text-muted-foreground">
+              Open the patient workspace to work inside their chart context.
+            </p>
+            <Button className="mt-3" asChild onClick={() => openPatientWorkspace(currentPatient.id)}>
+              <Link href={`/dashboard/patient/${currentPatient.id}`}>
+                Open current patient
+                <ArrowUpRight />
+              </Link>
+            </Button>
           </CardContent>
         </Card>
 
         <Card className="border-emerald-200 bg-emerald-50/80 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/30">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <Badge variant="success">Differentiator</Badge>
+              <Badge variant="success">Cyber Hygiene</Badge>
               <ShieldAlert className="size-5 text-emerald-700 dark:text-emerald-300" />
             </div>
-            <CardTitle>Cyber Hygiene readiness</CardTitle>
+            <CardTitle>Practice cyber posture</CardTitle>
             <CardDescription>
-              A practical risk posture snapshot for solo and small practices.
+              Security posture stays global, not inside individual patient charts.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -148,9 +75,7 @@ export function DashboardOverview() {
                 <span className="text-4xl font-semibold text-emerald-700 dark:text-emerald-300">
                   {cyberRiskScore.score}
                 </span>
-                <span className="text-sm text-muted-foreground">
-                  Low risk target: 90+
-                </span>
+                <span className="text-sm text-muted-foreground">Target: 90+</span>
               </div>
               <Progress value={cyberRiskScore.score} className="mt-3 bg-emerald-200" />
             </div>
@@ -162,160 +87,89 @@ export function DashboardOverview() {
                 </li>
               ))}
             </ul>
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/cyber-hygiene">Open Cyber Hygiene</Link>
+            </Button>
           </CardContent>
         </Card>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        {connectedOverviewStats.map((stat) => {
-          const Icon = stat.icon;
-
-          return (
-            <Link key={stat.label} href={stat.href}>
-              <Card
-                className={cn(
-                  "h-full transition-colors hover:border-primary/40",
-                  stat.featured &&
-                    "border-emerald-300 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/20",
-                )}
-              >
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                  <CardDescription>{stat.label}</CardDescription>
-                  <span
-                    className={cn(
-                      "rounded-lg bg-secondary p-2 text-secondary-foreground",
-                      stat.featured &&
-                        "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-200",
-                    )}
-                  >
-                    <Icon className="size-4" />
-                  </span>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-semibold">{stat.value}</div>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {stat.helper}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })}
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {dashboardQuickActions.map((action) => {
-          const Icon = action.icon;
-
-          return (
-            <Card
-              key={action.title}
-              className={cn(
-                "transition-colors hover:border-primary/40",
-                action.featured &&
-                  "border-emerald-300 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/20",
-              )}
-            >
-              <CardHeader>
-                <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                  <Icon className="size-5" />
-                </span>
-                <CardTitle className="text-lg">{action.title}</CardTitle>
-                <CardDescription>{action.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant={action.featured ? "default" : "outline"} asChild>
-                  <Link href={action.href}>
-                    Launch
-                    <ArrowUpRight />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </section>
-
-      <RoiCalculator />
-
-      <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card id="activity">
+      <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+        <Card>
           <CardHeader>
-            <CardTitle>Recent activity across modules</CardTitle>
+            <div className="flex items-center gap-2">
+              <UsersRound className="size-5 text-primary" />
+              <CardTitle>Patients assigned to you</CardTitle>
+            </div>
             <CardDescription>
-              A unified operational feed showing how MedGuard workflows connect.
+              Click a patient to open their workspace.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-5">
-            {connectedRecentActivity.map((activity) => {
-              const Icon = activity.icon;
+          <CardContent className="space-y-3">
+            {assignedPatients.map((patient) => {
+              const metrics = getPatientCommandMetrics(patient);
 
               return (
                 <Link
-                  key={activity.title}
-                  href={activity.href}
-                  className="flex gap-4 rounded-xl p-2 transition-colors hover:bg-muted/60"
+                  key={patient.id}
+                  href={`/dashboard/patient/${patient.id}`}
+                  onClick={() => openPatientWorkspace(patient.id)}
+                  className="flex items-center justify-between gap-3 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/50"
                 >
-                  <span
-                    className={cn(
-                      "flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground",
-                      activity.featured &&
-                        "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-200",
-                    )}
-                  >
-                    <Icon className="size-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-medium">{activity.title}</p>
-                      <span className="text-xs text-muted-foreground">
-                        {activity.time}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {activity.detail}
+                  <div>
+                    <p className="font-medium">{patient.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      DOB {patient.dob} · Last visit {patient.lastVisit}
                     </p>
+                  </div>
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <Badge variant="outline">{metrics.notesCount} notes</Badge>
+                    <Badge variant="outline" className={getRiskBadgeClass(metrics.cyberRisk)}>
+                      {metrics.cyberRisk}
+                    </Badge>
                   </div>
                 </Link>
               );
             })}
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/patients">View all patients</Link>
+            </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Sparkles className="size-5 text-primary" />
-              <CardTitle>Cohesion roadmap</CardTitle>
+              <FlaskConical className="size-5 text-primary" />
+              <CardTitle>Labs pending review</CardTitle>
             </div>
             <CardDescription>
-              The app now behaves more like one operating system.
+              Labs that need provider review or patient follow-up.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="foundation">
-              <TabsList>
-                <TabsTrigger active>Connected</TabsTrigger>
-                <TabsTrigger>Next</TabsTrigger>
-              </TabsList>
-              <TabsContent className="space-y-3 text-sm text-muted-foreground">
-                <p>
-                  Shared patient state, module handoffs, connected activity,
-                  and a patient directory are in place for internal testing.
+          <CardContent className="space-y-3">
+            {pendingLabs.map((lab) => (
+              <Link
+                key={lab.id}
+                href={`/dashboard/patient/${lab.patientId}`}
+                onClick={() => openPatientWorkspace(lab.patientId)}
+                className="block rounded-xl border bg-card p-4 transition-colors hover:bg-muted/50"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-medium">{lab.test}</p>
+                  <Badge variant={lab.priority === "Routine" ? "outline" : "secondary"}>
+                    {lab.priority}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {lab.patientName} · {lab.received}
                 </p>
-                {subscriptionMounted && hasAdvancedAnalytics ? (
-                  <p>
-                    Advanced analytics are unlocked. Next polish can connect
-                    durable Supabase-backed patient records and live ROI charts.
-                  </p>
-                ) : (
-                  <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
-                    Advanced analytics / ROI dashboard requires Premium or SMB.
-                    Visit Billing to unlock revenue and productivity reporting.
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
+                <p className="mt-2 text-sm text-muted-foreground">{lab.summary}</p>
+              </Link>
+            ))}
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/patients">Open patient work queue</Link>
+            </Button>
           </CardContent>
         </Card>
       </section>

@@ -65,6 +65,7 @@ import {
   type NoteMode,
   type SoapNote,
 } from "@/lib/clinical-notes/data";
+import { redactSecrets } from "@/lib/security/redact";
 import { usePatientStore } from "@/lib/stores/patientStore";
 import { cn } from "@/lib/utils";
 
@@ -126,7 +127,9 @@ export function ClinicalNotesWorkspace() {
   const [mode, setMode] = useState<NoteMode>(
     pendingClinicalNotePrefill ? "text" : "voice",
   );
-  const [encounterInput, setEncounterInput] = useState(pendingClinicalNotePrefill);
+  const [encounterInput, setEncounterInput] = useState(
+    redactSecrets(pendingClinicalNotePrefill),
+  );
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -167,6 +170,18 @@ export function ClinicalNotesWorkspace() {
     [selectedTemplateId],
   );
 
+  function updateEncounterInput(value: string) {
+    setEncounterInput(redactSecrets(value));
+  }
+
+  function updateSecondaryOutput(value: string) {
+    setSecondaryOutput(redactSecrets(value));
+  }
+
+  function updateMagicEditPrompt(value: string) {
+    setMagicEditPrompt(redactSecrets(value));
+  }
+
   function getClinicalActionInput(instruction?: string) {
     return {
       patient: selectedPatient,
@@ -177,16 +192,16 @@ export function ClinicalNotesWorkspace() {
         prompt: selectedTemplate.prompt,
       },
       specialty: selectedSpecialty,
-      encounterInput,
+      encounterInput: redactSecrets(encounterInput),
       note: soapNote,
-      instruction,
+      instruction: instruction ? redactSecrets(instruction) : undefined,
     };
   }
 
   async function handleStartAmbient() {
     setMode("voice");
     setIsTranscribing(true);
-    setEncounterInput("");
+    updateEncounterInput("");
     setAiError("");
     setStatusMessage("Requesting browser microphone and listening...");
 
@@ -235,7 +250,7 @@ export function ClinicalNotesWorkspace() {
           )
             .join(" ")
             .trim();
-          setEncounterInput(transcript);
+          updateEncounterInput(transcript);
         };
         recognition.onerror = () => {
           settle(() => reject(new Error("Browser speech recognition failed.")));
@@ -265,7 +280,7 @@ export function ClinicalNotesWorkspace() {
       let transcript = "";
       for (const segment of transcriptionSegments) {
         transcript = `${transcript}${transcript ? " " : ""}${segment}`;
-        setEncounterInput(transcript);
+        updateEncounterInput(transcript);
         await wait(650);
       }
     }
@@ -306,7 +321,7 @@ export function ClinicalNotesWorkspace() {
     setAiError("");
     try {
       const result = await generatePatientInstructionsAction(getClinicalActionInput());
-      setSecondaryOutput(result.text);
+      updateSecondaryOutput(result.text);
       setStatusMessage(`Patient instructions generated with ${result.provider} / ${result.model}.`);
     } catch (error) {
       setAiError(error instanceof Error ? error.message : "Unable to generate patient instructions.");
@@ -320,7 +335,7 @@ export function ClinicalNotesWorkspace() {
     setAiError("");
     try {
       const result = await generateReferralLetterAction(getClinicalActionInput());
-      setSecondaryOutput(result.text);
+      updateSecondaryOutput(result.text);
       setStatusMessage(`Referral letter generated with ${result.provider} / ${result.model}.`);
     } catch (error) {
       setAiError(error instanceof Error ? error.message : "Unable to generate referral letter.");
@@ -336,7 +351,7 @@ export function ClinicalNotesWorkspace() {
       const result = await magicEditClinicalNoteAction(
         getClinicalActionInput(magicEditPrompt),
       );
-      setSecondaryOutput(result.text);
+      updateSecondaryOutput(result.text);
       setStatusMessage(`Magic Edit generated with ${result.provider} / ${result.model}.`);
     } catch (error) {
       setAiError(error instanceof Error ? error.message : "Unable to run Magic Edit.");
@@ -352,7 +367,7 @@ export function ClinicalNotesWorkspace() {
       const result = await magicEditClinicalNoteAction(
         getClinicalActionInput(`Answer this clinical question for provider review: ${clinicalQuestion}`),
       );
-      setSecondaryOutput(result.text);
+      updateSecondaryOutput(result.text);
       setStatusMessage(`Clinical question answered with ${result.provider} / ${result.model}.`);
     } catch (error) {
       setAiError(error instanceof Error ? error.message : "Unable to answer clinical question.");
@@ -370,7 +385,7 @@ export function ClinicalNotesWorkspace() {
           `Regenerate only the ${sectionToRegenerate} section. Preserve known facts and make it concise.`,
         ),
       );
-      setSecondaryOutput(result.text);
+      updateSecondaryOutput(result.text);
       setStatusMessage(`${sectionToRegenerate} section regenerated with ${result.provider} / ${result.model}.`);
     } catch (error) {
       setAiError(error instanceof Error ? error.message : "Unable to regenerate section.");
@@ -383,7 +398,7 @@ export function ClinicalNotesWorkspace() {
     const style = [
       `Template: ${selectedTemplate.title}`,
       `Specialty: ${selectedSpecialty}`,
-      `Preference: ${magicEditPrompt}`,
+      `Preference: ${redactSecrets(magicEditPrompt)}`,
     ].join(" | ");
     window.localStorage.setItem("medguard-clinical-note-style", style);
     setSavedStyle(style);
@@ -405,8 +420,8 @@ export function ClinicalNotesWorkspace() {
       `Context: ${selectedPatient.reason}`,
       "",
       soapNote
-        ? buildPlainTextSoap(soapNote)
-        : encounterInput ||
+        ? redactSecrets(buildPlainTextSoap(soapNote))
+        : redactSecrets(encounterInput) ||
           "No generated SOAP note yet. Generate a note or copy encounter context before EHR push.",
       "",
       "Generated by MedGuard AI. Review before signing.",
@@ -714,7 +729,7 @@ export function ClinicalNotesWorkspace() {
               <Textarea
                 id="encounter-input"
                 value={encounterInput}
-                onChange={(event) => setEncounterInput(event.target.value)}
+                onChange={(event) => updateEncounterInput(event.target.value)}
                 placeholder="Dictation, pasted notes, patient history, exam findings, or uploaded-file summary..."
                 className="min-h-44"
               />
@@ -777,7 +792,7 @@ export function ClinicalNotesWorkspace() {
               <Label>Magic Edit</Label>
               <Textarea
                 value={magicEditPrompt}
-                onChange={(event) => setMagicEditPrompt(event.target.value)}
+                onChange={(event) => updateMagicEditPrompt(event.target.value)}
                 className="min-h-20"
               />
               <div className="flex gap-2">
@@ -821,7 +836,7 @@ export function ClinicalNotesWorkspace() {
             {secondaryOutput ? (
               <Textarea
                 value={secondaryOutput}
-                onChange={(event) => setSecondaryOutput(event.target.value)}
+                onChange={(event) => updateSecondaryOutput(event.target.value)}
                 className="min-h-44"
               />
             ) : null}

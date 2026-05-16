@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   Archive,
@@ -53,7 +54,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { mockPatients } from "@/lib/clinical-notes/data";
 import {
   buildCustomLegalTemplate,
   generateLegalDocument,
@@ -67,6 +67,7 @@ import {
   type LegalDocumentStatus,
   type LegalDocumentTemplate,
 } from "@/lib/legal-documents/data";
+import { usePatientStore } from "@/lib/patients/store";
 import { cn } from "@/lib/utils";
 
 function wait(ms: number) {
@@ -83,13 +84,13 @@ const statusStyles: Record<LegalDocumentStatus, string> = {
 };
 
 export function LegalDocumentsWorkspace() {
+  const { patients, activePatientId, setActivePatient } = usePatientStore();
   const [templates, setTemplates] = useState<LegalDocumentTemplate[]>(
     legalDocumentTemplates,
   );
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     legalDocumentTemplates[0].id,
   );
-  const [selectedPatientId, setSelectedPatientId] = useState(mockPatients[0].id);
   const [searchQuery, setSearchQuery] = useState("");
   const [customPrompt, setCustomPrompt] = useState(
     "Create telehealth consent for new patient including photography permission",
@@ -99,7 +100,9 @@ export function LegalDocumentsWorkspace() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedDocument, setGeneratedDocument] =
     useState<GeneratedLegalDocument | null>(null);
-  const [patientNameField, setPatientNameField] = useState(mockPatients[0].name);
+  const [patientNameField, setPatientNameField] = useState(
+    patients[0]?.name ?? "",
+  );
   const [dateField, setDateField] = useState("");
   const [customClausesField, setCustomClausesField] = useState("");
   const [documentBodyField, setDocumentBodyField] = useState("");
@@ -116,9 +119,8 @@ export function LegalDocumentsWorkspace() {
 
   const selectedPatient = useMemo(
     () =>
-      mockPatients.find((patient) => patient.id === selectedPatientId) ??
-      mockPatients[0],
-    [selectedPatientId],
+      patients.find((patient) => patient.id === activePatientId) ?? patients[0],
+    [patients, activePatientId],
   );
 
   const filteredTemplates = useMemo(() => {
@@ -179,9 +181,9 @@ export function LegalDocumentsWorkspace() {
 
   function handlePatientChange(patientId: string) {
     const patient =
-      mockPatients.find((currentPatient) => currentPatient.id === patientId) ??
-      mockPatients[0];
-    setSelectedPatientId(patientId);
+      patients.find((currentPatient) => currentPatient.id === patientId) ??
+      patients[0];
+    setActivePatient(patientId);
     setPatientNameField(patient.name);
   }
 
@@ -261,12 +263,12 @@ export function LegalDocumentsWorkspace() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Select value={selectedPatientId} onValueChange={handlePatientChange}>
+            <Select value={activePatientId} onValueChange={handlePatientChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Select patient" />
               </SelectTrigger>
               <SelectContent>
-                {mockPatients.map((patient) => (
+                {patients.map((patient) => (
                   <SelectItem key={patient.id} value={patient.id}>
                     {patient.name} - {patient.reason}
                   </SelectItem>
@@ -283,6 +285,11 @@ export function LegalDocumentsWorkspace() {
                 Current context: {selectedPatient.reason}
               </p>
             </div>
+            <Button variant="outline" className="w-full" asChild>
+              <Link href={`/dashboard/patients?patient=${selectedPatient.id}`}>
+                View patient profile
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </section>

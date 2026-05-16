@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
@@ -62,6 +63,7 @@ import {
   type MigrationIssueSeverity,
   type MigrationStep,
 } from "@/lib/data-migration/data";
+import { usePatientStore } from "@/lib/patients/store";
 import { cn } from "@/lib/utils";
 
 function wait(ms: number) {
@@ -88,6 +90,8 @@ function getStepIndex(step: MigrationStep) {
 }
 
 export function DataMigrationWizard() {
+  const { patients, setActivePatient, setPendingClinicalNotePrefill } =
+    usePatientStore();
   const [currentStep, setCurrentStep] = useState<MigrationStep>("welcome");
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [analysisProgress, setAnalysisProgress] = useState(0);
@@ -183,6 +187,23 @@ export function DataMigrationWizard() {
   function goToNextStep() {
     const nextStep = steps[Math.min(activeStepIndex + 1, steps.length - 1)];
     setCurrentStep(nextStep.id);
+  }
+
+  function prepareClinicalNotesView(patientName: string, summary: string) {
+    const patient = patients.find((currentPatient) => currentPatient.name === patientName);
+
+    if (patient) {
+      setActivePatient(patient.id);
+    }
+
+    setPendingClinicalNotePrefill(
+      [
+        `Migrated record review for ${patientName}`,
+        summary,
+        "",
+        "Review imported history and generate a concise continuity-of-care note.",
+      ].join("\n"),
+    );
   }
 
   return (
@@ -442,6 +463,7 @@ export function DataMigrationWizard() {
                     <TableHead>Notes Summary</TableHead>
                     <TableHead>Source</TableHead>
                     <TableHead>Confidence</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -458,6 +480,23 @@ export function DataMigrationWizard() {
                       <TableCell>{record.source}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{record.confidence}%</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          asChild
+                          onClick={() =>
+                            prepareClinicalNotesView(
+                              record.patientName,
+                              record.notesSummary,
+                            )
+                          }
+                        >
+                          <Link href="/dashboard/clinical-notes">
+                            View in Clinical Notes
+                          </Link>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -67,7 +67,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { mockPatients } from "@/lib/clinical-notes/data";
 import {
   autoFillFromHistory,
   buildSmartTemplate,
@@ -82,6 +81,7 @@ import {
   type IntakeFormValues,
   type IntakeTemplate,
 } from "@/lib/smart-intake/data";
+import { usePatientStore } from "@/lib/patients/store";
 import { cn } from "@/lib/utils";
 
 function wait(ms: number) {
@@ -97,12 +97,17 @@ function shouldShowField(field: IntakeField, values: IntakeFormValues) {
 }
 
 export function SmartIntakeWorkspace() {
+  const {
+    patients,
+    activePatientId,
+    setActivePatient,
+    setPendingClinicalNotePrefill,
+  } = usePatientStore();
   const [templates, setTemplates] = useState<IntakeTemplate[]>(intakeTemplates);
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     intakeTemplates[0].id,
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPatientId, setSelectedPatientId] = useState(mockPatients[0].id);
   const [builderPrompt, setBuilderPrompt] = useState(
     "Create intake for new diabetic patient",
   );
@@ -121,9 +126,8 @@ export function SmartIntakeWorkspace() {
 
   const selectedPatient = useMemo(
     () =>
-      mockPatients.find((patient) => patient.id === selectedPatientId) ??
-      mockPatients[0],
-    [selectedPatientId],
+      patients.find((patient) => patient.id === activePatientId) ?? patients[0],
+    [patients, activePatientId],
   );
 
   const filteredTemplates = useMemo(() => {
@@ -186,6 +190,24 @@ export function SmartIntakeWorkspace() {
   function handleSubmit(valuesToSubmit: IntakeFormValues) {
     setSubmissionSummary(summarizeIntake(valuesToSubmit));
     setPortalMessage("");
+  }
+
+  function prepareClinicalNoteHandoff() {
+    const answeredFields = visibleFields
+      .map((field) => `${field.label}: ${String(values[field.id] || "Not answered")}`)
+      .join("\n");
+
+    setActivePatient(selectedPatient.id);
+    setPendingClinicalNotePrefill(
+      [
+        `Smart Intake handoff for ${selectedPatient.name}`,
+        `Template: ${selectedTemplate.title}`,
+        "",
+        answeredFields,
+        "",
+        "Generate a concise SOAP note from this intake packet and highlight any red flags.",
+      ].join("\n"),
+    );
   }
 
   function renderField(field: IntakeField) {
@@ -302,12 +324,12 @@ export function SmartIntakeWorkspace() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+            <Select value={activePatientId} onValueChange={setActivePatient}>
               <SelectTrigger>
                 <SelectValue placeholder="Select patient" />
               </SelectTrigger>
               <SelectContent>
-                {mockPatients.map((patient) => (
+                {patients.map((patient) => (
                   <SelectItem key={patient.id} value={patient.id}>
                     {patient.name} - {patient.reason}
                   </SelectItem>
@@ -562,10 +584,15 @@ export function SmartIntakeWorkspace() {
             )}
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <Button asChild variant="outline" disabled={!submissionSummary}>
+              <Button
+                asChild
+                variant="outline"
+                disabled={!submissionSummary}
+                onClick={prepareClinicalNoteHandoff}
+              >
                 <Link href={generateDraftClinicalNoteLink()}>
                   <FileText />
-                  Generate Note
+                  Generate Clinical Note
                 </Link>
               </Button>
               <Button
@@ -639,7 +666,7 @@ export function SmartIntakeWorkspace() {
                         <Edit />
                         Edit
                       </Button>
-                      <Button size="sm" asChild>
+                      <Button size="sm" asChild onClick={prepareClinicalNoteHandoff}>
                         <Link href="/dashboard/clinical-notes">
                           <FileText />
                           Generate Note

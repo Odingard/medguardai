@@ -5,6 +5,7 @@ import {
   FileText,
   LayoutDashboard,
   ShieldCheck,
+  UsersRound,
 } from "lucide-react";
 
 export const dashboardNavigation = [
@@ -12,6 +13,12 @@ export const dashboardNavigation = [
     title: "Overview",
     href: "/dashboard",
     icon: LayoutDashboard,
+    featured: false,
+  },
+  {
+    title: "Patients",
+    href: "/dashboard/patients",
+    icon: UsersRound,
     featured: false,
   },
   {

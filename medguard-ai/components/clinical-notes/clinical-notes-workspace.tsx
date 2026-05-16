@@ -50,7 +50,6 @@ import {
   clinicalTemplates,
   generateMockSoapNote,
   mockCopyToEhr,
-  mockPatients,
   mockSaveNoteToPatientRecord,
   pastNotes,
   transcriptionSegments,
@@ -58,6 +57,7 @@ import {
   type NoteMode,
   type SoapNote,
 } from "@/lib/clinical-notes/data";
+import { usePatientStore } from "@/lib/patients/store";
 import { cn } from "@/lib/utils";
 
 function wait(ms: number) {
@@ -68,18 +68,28 @@ const selectClassName =
   "h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export function ClinicalNotesWorkspace() {
-  const [patients, setPatients] = useState<MockPatient[]>(mockPatients);
-  const [selectedPatientId, setSelectedPatientId] = useState(mockPatients[0].id);
+  const {
+    patients,
+    activePatientId,
+    addPatient,
+    setActivePatient,
+    pendingClinicalNotePrefill,
+    clearPendingClinicalNotePrefill,
+  } = usePatientStore();
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     clinicalTemplates[0].id,
   );
-  const [mode, setMode] = useState<NoteMode>("voice");
-  const [encounterInput, setEncounterInput] = useState("");
+  const [mode, setMode] = useState<NoteMode>(
+    pendingClinicalNotePrefill ? "text" : "voice",
+  );
+  const [encounterInput, setEncounterInput] = useState(pendingClinicalNotePrefill);
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [statusMessage, setStatusMessage] = useState(
-    "Select a patient and start with voice, text, upload, or a template.",
+    pendingClinicalNotePrefill
+      ? "Smart Intake handoff loaded. Review the prefill, then generate the SOAP note."
+      : "Select a patient and start with voice, text, upload, or a template.",
   );
   const [newPatientName, setNewPatientName] = useState("");
   const [newPatientReason, setNewPatientReason] = useState("");
@@ -88,9 +98,9 @@ export function ClinicalNotesWorkspace() {
 
   const selectedPatient = useMemo(
     () =>
-      patients.find((patient) => patient.id === selectedPatientId) ??
+      patients.find((patient) => patient.id === activePatientId) ??
       patients[0],
-    [patients, selectedPatientId],
+    [patients, activePatientId],
   );
 
   const selectedTemplate = useMemo(
@@ -142,6 +152,7 @@ export function ClinicalNotesWorkspace() {
         input: encounterInput,
       }),
     );
+    clearPendingClinicalNotePrefill();
     setIsGenerating(false);
     setStatusMessage(
       "SOAP note generated. Edit any section, copy to EHR, or save to the mock patient record.",
@@ -175,8 +186,7 @@ export function ClinicalNotesWorkspace() {
       lastVisit: "New patient",
     };
 
-    setPatients((current) => [patient, ...current]);
-    setSelectedPatientId(patient.id);
+    addPatient(patient);
     setNewPatientName("");
     setNewPatientReason("");
     setDialogOpen(false);
@@ -246,8 +256,8 @@ export function ClinicalNotesWorkspace() {
               <Label htmlFor="patient">Patient</Label>
               <select
                 id="patient"
-                value={selectedPatientId}
-                onChange={(event) => setSelectedPatientId(event.target.value)}
+                value={activePatientId}
+                onChange={(event) => setActivePatient(event.target.value)}
                 className={selectClassName}
               >
                 {patients.map((patient) => (

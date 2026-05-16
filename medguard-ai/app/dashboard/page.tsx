@@ -12,8 +12,8 @@ export default function DashboardPage() {
         </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
           Monitor documentation throughput, intake progress, legal workflows,
-          migration status, and the Cyber Hygiene risk posture that differentiates
-          MedGuard AI.
+          migration status, shared patient handoffs, and the Cyber Hygiene risk
+          posture that differentiates MedGuard AI.
         </p>
       </div>
       <DashboardOverview />

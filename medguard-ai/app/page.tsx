@@ -1,65 +1,96 @@
-import Image from "next/image";
+import { ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),_transparent_32%),linear-gradient(135deg,_hsl(var(--background)),_hsl(var(--secondary)))]">
+      <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8">
+        <header className="flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <span className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+              <ShieldCheck className="size-6" />
+            </span>
+            <span className="text-xl font-semibold tracking-tight">
+              MedGuard AI
+            </span>
+          </Link>
+          <Button asChild>
+            <Link href="/login">
+              Sign in
+              <ArrowRight />
+            </Link>
+          </Button>
+        </header>
+
+        <section className="grid flex-1 items-center gap-10 py-16 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-8">
+            <Badge variant="success" className="w-fit">
+              Built for solo and small medical practices
+            </Badge>
+            <div className="space-y-5">
+              <h1 className="max-w-4xl text-5xl font-semibold tracking-tight sm:text-7xl">
+                AI practice operations with cyber readiness at the center.
+              </h1>
+              <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
+                MedGuard AI brings clinical notes, intake, legal workflows,
+                data migration, and Cyber Hygiene into one professional SaaS
+                dashboard.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button size="lg" asChild>
+                <Link href="/dashboard">
+                  Open dashboard
+                  <ArrowRight />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link href="/login">Magic-link login</Link>
+              </Button>
+            </div>
+          </div>
+
+          <Card className="border-primary/10 bg-card/90 shadow-xl shadow-primary/10">
+            <CardHeader>
+              <Badge variant="outline" className="w-fit">
+                Foundation ready
+              </Badge>
+              <CardTitle className="text-2xl">Core modules</CardTitle>
+              <CardDescription>
+                A modular workspace designed to grow one production-minded
+                module at a time.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {[
+                "Clinical Notes",
+                "Smart Intake",
+                "Legal Documents",
+                "Cyber Hygiene",
+                "Data Migration",
+              ].map((module) => (
+                <div
+                  key={module}
+                  className="flex items-center justify-between rounded-xl border bg-background/70 p-4"
+                >
+                  <span className="font-medium">{module}</span>
+                  <CheckCircle2 className="size-5 text-emerald-500" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    </main>
   );
 }

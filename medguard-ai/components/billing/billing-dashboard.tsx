@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AlertTriangle, CheckCircle2, Chrome, CreditCard, ExternalLink } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Puzzle, CreditCard, ExternalLink } from "lucide-react";
 
 import {
   createCheckoutSessionAction,
@@ -125,11 +125,11 @@ export function BillingDashboard() {
         <Card className="border-blue-300 bg-blue-50/70 dark:border-blue-900 dark:bg-blue-950/20">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Chrome className="size-5 text-primary" />
-              <CardTitle>Install Chrome Extension</CardTitle>
+              <Puzzle className="size-5 text-primary" />
+              <CardTitle>Install Puzzle Extension</CardTitle>
             </div>
             <CardDescription>
-              Local MVP install: open Chrome Extensions, enable Developer mode,
+              Local MVP install: open Puzzle Extensions, enable Developer mode,
               choose Load unpacked, and select the `chrome-extension/` folder in
               this project. The extension adds a MedGuard Push button on
               supported EHR pages and simulates SOAP note insertion/copy.
@@ -140,11 +140,11 @@ export function BillingDashboard() {
               variant="outline"
               onClick={() =>
                 setStatusMessage(
-                  "Chrome Extension install: open chrome://extensions, enable Developer mode, click Load unpacked, then select medguard-ai/chrome-extension.",
+                  "Puzzle Extension install: open chrome://extensions, enable Developer mode, click Load unpacked, then select medguard-ai/chrome-extension.",
                 )
               }
             >
-              <Chrome />
+              <Puzzle />
               Show install instructions
             </Button>
             <Button variant="outline" asChild>

@@ -1,5 +1,5 @@
 import {
-  Chrome,
+  Puzzle,
   ClipboardCheck,
   DatabaseZap,
   FileHeart,
@@ -91,10 +91,10 @@ export const dashboardQuickActions = [
     featured: false,
   },
   {
-    title: "Install Chrome Extension",
+    title: "Install Puzzle Extension",
     description: "Enable EHR Push from supported EHR tabs.",
     href: "/dashboard/billing#chrome-extension",
-    icon: Chrome,
+    icon: Puzzle,
     featured: false,
   },
 ] as const;

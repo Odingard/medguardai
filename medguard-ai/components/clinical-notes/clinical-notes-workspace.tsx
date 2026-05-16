@@ -113,7 +113,7 @@ export function ClinicalNotesWorkspace() {
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     clinicalTemplates[0].id,
   );
-  const [selectedSpecialty, setSelectedSpecialty] = useState(
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>(
     specialtyTemplates[0],
   );
   const [mode, setMode] = useState<NoteMode>(

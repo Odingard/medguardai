@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, FlaskConical, ShieldAlert, UsersRound } from "lucide-react";
+import { ArrowUpRight, FlaskConical, ShieldAlert, Stethoscope, UsersRound } from "lucide-react";
 
 import { OnboardingTour } from "@/components/onboarding/onboarding-tour";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ import { usePatientStore } from "@/lib/stores/patientStore";
 export function DashboardOverview() {
   const { patients, currentPatientId, openPatientWorkspace } = usePatientStore();
   const assignedPatients = patients.slice(0, 5);
+  const providersLoggedIn = 3;
   const currentPatient =
     patients.find((patient) => patient.id === currentPatientId) ?? patients[0];
 
@@ -90,6 +91,60 @@ export function DashboardOverview() {
             <Button variant="outline" asChild>
               <Link href="/dashboard/cyber-hygiene">Open Cyber Hygiene</Link>
             </Button>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Stethoscope className="size-5 text-primary" />
+              <CardTitle>Providers logged in</CardTitle>
+            </div>
+            <CardDescription>
+              Active provider sessions across the practice workspace.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-semibold">{providersLoggedIn}</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Demo metric until Supabase presence is connected.
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <UsersRound className="size-5 text-primary" />
+              <CardTitle>Assigned patients</CardTitle>
+            </div>
+            <CardDescription>
+              Patients assigned to this provider today.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-semibold">{assignedPatients.length}</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Open the list below to work a patient chart.
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <FlaskConical className="size-5 text-primary" />
+              <CardTitle>Labs pending</CardTitle>
+            </div>
+            <CardDescription>
+              Labs waiting for provider review or patient follow-up.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-semibold">{pendingLabs.length}</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Prioritize review before starting visits.
+            </p>
           </CardContent>
         </Card>
       </section>

@@ -31,6 +31,15 @@ export type SoapNote = {
   assessment: string;
   plan: string;
   billingCodes: string[];
+  icdCodes: string[];
+  confidence: {
+    subjective: number;
+    objective: number;
+    assessment: number;
+    plan: number;
+    billing: number;
+    overall: number;
+  };
 };
 
 export const mockPatients: MockPatient[] = [
@@ -91,6 +100,17 @@ export const clinicalTemplates: ClinicalTemplate[] = [
   },
 ] as const;
 
+export const specialtyTemplates = [
+  "Primary Care",
+  "Family Medicine",
+  "Internal Medicine",
+  "Pediatrics",
+  "Cardiology",
+  "Endocrinology",
+  "Behavioral Health",
+  "Urgent Care",
+] as const;
+
 export const transcriptionSegments = [
   "Patient reports blood pressure has been better controlled at home, averaging around 128 over 78.",
   "She denies chest pain, shortness of breath, dizziness, or medication side effects.",
@@ -146,6 +166,15 @@ export function generateMockSoapNote({
     plan:
       "Continue current medications unless otherwise noted. Reinforce lifestyle guidance and medication adherence. Order indicated labs or follow-up testing. Return precautions reviewed. Follow up in 3 months or sooner for worsening symptoms.",
     billingCodes: ["99213", "99214", "G2211"],
+    icdCodes: ["I10", "Z79.899"],
+    confidence: {
+      subjective: 88,
+      objective: 74,
+      assessment: 78,
+      plan: 82,
+      billing: 68,
+      overall: 80,
+    },
   };
 }
 
@@ -163,7 +192,9 @@ export function buildPlainTextSoap(note: SoapNote) {
     "PLAN",
     note.plan,
     "",
-    `Suggested E/M codes: ${note.billingCodes.join(", ")}`,
+    `Suggested E/M/CPT codes: ${note.billingCodes.join(", ")}`,
+    `Suggested ICD-10 codes: ${note.icdCodes.join(", ")}`,
+    `Overall confidence: ${note.confidence.overall}%`,
   ].join("\n");
 }
 
@@ -182,8 +213,8 @@ export const clinicalModuleHighlights = [
     icon: Stethoscope,
   },
   {
-    label: "Mock AI output",
-    value: "SOAP + E/M",
+    label: "AI output",
+    value: "SOAP + ICD/CPT",
     icon: FileHeart,
   },
 ] as const;

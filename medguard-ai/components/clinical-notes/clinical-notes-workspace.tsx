@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+
+import { generateClinicalSoapNoteAction } from "@/app/dashboard/clinical-notes/actions";
 import {
   CheckCircle2,
   ClipboardCopy,
@@ -48,10 +50,10 @@ import {
   buildPlainTextSoap,
   clinicalModuleHighlights,
   clinicalTemplates,
-  generateMockSoapNote,
   mockCopyToEhr,
   mockSaveNoteToPatientRecord,
   pastNotes,
+  specialtyTemplates,
   transcriptionSegments,
   type MockPatient,
   type NoteMode,
@@ -67,6 +69,38 @@ function wait(ms: number) {
 const selectClassName =
   "h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
+type BrowserSpeechRecognitionResult = {
+  0?: {
+    transcript: string;
+  };
+};
+
+type BrowserSpeechRecognitionEvent = {
+  results: ArrayLike<BrowserSpeechRecognitionResult>;
+};
+
+type BrowserSpeechRecognition = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: BrowserSpeechRecognitionEvent) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
+
+function getBrowserSpeechRecognition() {
+  const speechWindow = window as Window & {
+    SpeechRecognition?: BrowserSpeechRecognitionConstructor;
+    webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor;
+  };
+
+  return speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
+}
+
 export function ClinicalNotesWorkspace() {
   const {
     patients,
@@ -79,6 +113,9 @@ export function ClinicalNotesWorkspace() {
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     clinicalTemplates[0].id,
   );
+  const [selectedSpecialty, setSelectedSpecialty] = useState(
+    specialtyTemplates[0],
+  );
   const [mode, setMode] = useState<NoteMode>(
     pendingClinicalNotePrefill ? "text" : "voice",
   );
@@ -86,6 +123,9 @@ export function ClinicalNotesWorkspace() {
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [aiProviderLabel, setAiProviderLabel] = useState("Mock fallback");
+  const [aiWarning, setAiWarning] = useState("");
+  const [aiError, setAiError] = useState("");
   const [statusMessage, setStatusMessage] = useState(
     pendingClinicalNotePrefill
       ? "Smart Intake handoff loaded. Review the prefill, then generate the SOAP note."
@@ -114,49 +154,110 @@ export function ClinicalNotesWorkspace() {
     setMode("voice");
     setIsTranscribing(true);
     setEncounterInput("");
-    setStatusMessage("Requesting browser microphone and transcribing...");
+    setAiError("");
+    setStatusMessage("Requesting browser microphone and listening...");
 
     try {
       const stream = await navigator.mediaDevices?.getUserMedia?.({
         audio: true,
       });
       stream?.getTracks().forEach((track) => track.stop());
-    } catch {
-      setStatusMessage(
-        "Microphone permission was not granted, so MedGuard is showing a realistic transcription simulation.",
-      );
-    }
 
-    let transcript = "";
-    for (const segment of transcriptionSegments) {
-      transcript = `${transcript}${transcript ? " " : ""}${segment}`;
-      setEncounterInput(transcript);
-      await wait(650);
+      const Recognition = getBrowserSpeechRecognition();
+
+      if (!Recognition) {
+        throw new Error("Browser speech recognition is not supported.");
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        const recognition = new Recognition();
+        let transcript = "";
+        const timeoutId = window.setTimeout(() => {
+          recognition.stop();
+          if (transcript.trim()) {
+            resolve();
+          } else {
+            reject(new Error("No speech detected before timeout."));
+          }
+        }, 8000);
+
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+        recognition.onresult = (event) => {
+          transcript = Array.from(
+            { length: event.results.length },
+            (_, index) => event.results[index]?.[0]?.transcript ?? "",
+          )
+            .join(" ")
+            .trim();
+          setEncounterInput(transcript);
+        };
+        recognition.onerror = () => {
+          window.clearTimeout(timeoutId);
+          reject(new Error("Browser speech recognition failed."));
+        };
+        recognition.onend = () => {
+          window.clearTimeout(timeoutId);
+          if (transcript.trim()) {
+            resolve();
+          }
+        };
+        recognition.start();
+      });
+
+      setStatusMessage(
+        "Browser transcription captured. Review the text, then generate the SOAP note.",
+      );
+    } catch (error) {
+      setStatusMessage(
+        error instanceof Error
+          ? `${error.message} Showing realistic transcription simulation instead.`
+          : "Speech recognition unavailable. Showing realistic transcription simulation instead.",
+      );
+
+      let transcript = "";
+      for (const segment of transcriptionSegments) {
+        transcript = `${transcript}${transcript ? " " : ""}${segment}`;
+        setEncounterInput(transcript);
+        await wait(650);
+      }
     }
 
     setIsTranscribing(false);
-    setStatusMessage(
-      "Transcription simulation complete. Review the text, then generate the SOAP note.",
-    );
   }
 
   async function handleGenerateNote() {
     setIsGenerating(true);
-    setStatusMessage("Generating mock SOAP note and suggested E/M codes...");
-    await wait(750);
+    setAiError("");
+    setAiWarning("");
+    setStatusMessage("Generating SOAP note with MedGuard AI...");
 
-    setSoapNote(
-      generateMockSoapNote({
+    try {
+      const result = await generateClinicalSoapNoteAction({
         patient: selectedPatient,
         template: selectedTemplate,
-        input: encounterInput,
-      }),
-    );
-    clearPendingClinicalNotePrefill();
-    setIsGenerating(false);
-    setStatusMessage(
-      "SOAP note generated. Edit any section, copy to EHR, or save to the mock patient record.",
-    );
+        specialty: selectedSpecialty,
+        encounterInput,
+      });
+
+      setSoapNote(result.note);
+      setAiProviderLabel(`${result.provider} / ${result.model}`);
+      setAiWarning(result.warning ?? "");
+      clearPendingClinicalNotePrefill();
+      setStatusMessage(
+        "SOAP note generated. Edit any section, copy to EHR, or save to the mock patient record.",
+      );
+    } catch (error) {
+      setAiError(
+        error instanceof Error
+          ? error.message
+          : "Unable to generate SOAP note. Please try again.",
+      );
+      setStatusMessage("Clinical note generation failed.");
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
   async function handleCopyToEhr() {
@@ -278,6 +379,21 @@ export function ClinicalNotesWorkspace() {
               <p className="mt-1 text-muted-foreground">
                 Last visit: {selectedPatient.lastVisit}
               </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="specialty-template">Specialty template</Label>
+              <select
+                id="specialty-template"
+                value={selectedSpecialty}
+                onChange={(event) => setSelectedSpecialty(event.target.value)}
+                className={selectClassName}
+              >
+                {specialtyTemplates.map((specialty) => (
+                  <option key={specialty} value={specialty}>
+                    {specialty}
+                  </option>
+                ))}
+              </select>
             </div>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
@@ -428,16 +544,29 @@ export function ClinicalNotesWorkspace() {
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <Button onClick={handleGenerateNote} disabled={isGenerating}>
-                {isGenerating ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <Sparkles />
-                )}
-                Generate SOAP Note
-              </Button>
-              <p className="text-sm text-muted-foreground">{statusMessage}</p>
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <Button onClick={handleGenerateNote} disabled={isGenerating}>
+                  {isGenerating ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <Sparkles />
+                  )}
+                  Generate SOAP Note
+                </Button>
+                <Badge variant="outline">AI: {aiProviderLabel}</Badge>
+                <p className="text-sm text-muted-foreground">{statusMessage}</p>
+              </div>
+              {aiWarning ? (
+                <p className="rounded-md border bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+                  {aiWarning}
+                </p>
+              ) : null}
+              {aiError ? (
+                <p className="rounded-md border border-destructive/50 px-3 py-2 text-sm text-destructive">
+                  {aiError}
+                </p>
+              ) : null}
             </div>
           </CardContent>
         </Card>
@@ -522,14 +651,35 @@ export function ClinicalNotesWorkspace() {
                     />
                   </div>
                 ))}
-                <div className="rounded-xl border bg-muted/40 p-4">
-                  <p className="text-sm font-semibold">Suggested billing codes</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {soapNote.billingCodes.map((code) => (
-                      <Badge key={code} variant="outline">
-                        {code}
-                      </Badge>
-                    ))}
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <div className="rounded-xl border bg-muted/40 p-4">
+                    <p className="text-sm font-semibold">Suggested E/M/CPT codes</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {soapNote.billingCodes.map((code) => (
+                        <Badge key={code} variant="outline">
+                          {code}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border bg-muted/40 p-4">
+                    <p className="text-sm font-semibold">Suggested ICD-10 codes</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {soapNote.icdCodes.map((code) => (
+                        <Badge key={code} variant="outline">
+                          {code}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border bg-muted/40 p-4">
+                    <p className="text-sm font-semibold">AI confidence</p>
+                    <p className="mt-3 text-3xl font-semibold">
+                      {soapNote.confidence.overall}%
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Billing confidence: {soapNote.confidence.billing}%
+                    </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-3">

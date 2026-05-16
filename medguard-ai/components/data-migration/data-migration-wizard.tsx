@@ -63,7 +63,7 @@ import {
   type MigrationIssueSeverity,
   type MigrationStep,
 } from "@/lib/data-migration/data";
-import { usePatientStore } from "@/lib/patients/store";
+import { usePatientStore } from "@/lib/stores/patientStore";
 import { cn } from "@/lib/utils";
 
 function wait(ms: number) {
@@ -90,8 +90,12 @@ function getStepIndex(step: MigrationStep) {
 }
 
 export function DataMigrationWizard() {
-  const { patients, setActivePatient, setPendingClinicalNotePrefill } =
-    usePatientStore();
+  const {
+    patients,
+    currentPatientId,
+    setActivePatient,
+    prepareClinicalNoteHandoff,
+  } = usePatientStore();
   const [currentStep, setCurrentStep] = useState<MigrationStep>("welcome");
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [analysisProgress, setAnalysisProgress] = useState(0);
@@ -119,6 +123,11 @@ export function DataMigrationWizard() {
   const activeStepIndex = getStepIndex(currentStep);
   const fileCount = uploadedFiles.length || 3;
   const analysisResult = useMemo(() => simulateFileAnalysis(fileCount), [fileCount]);
+  const currentPatient = useMemo(
+    () =>
+      patients.find((patient) => patient.id === currentPatientId) ?? patients[0],
+    [patients, currentPatientId],
+  );
 
   function handleFiles(files: FileList | null) {
     if (!files?.length) {
@@ -192,18 +201,19 @@ export function DataMigrationWizard() {
   function prepareClinicalNotesView(patientName: string, summary: string) {
     const patient = patients.find((currentPatient) => currentPatient.name === patientName);
 
-    if (patient) {
-      setActivePatient(patient.id);
-    }
+    const patientId = patient?.id ?? currentPatient.id;
 
-    setPendingClinicalNotePrefill(
-      [
+    setActivePatient(patientId);
+    prepareClinicalNoteHandoff({
+      patientId,
+      source: "data-migration",
+      prefill: [
         `Migrated record review for ${patientName}`,
         summary,
         "",
         "Review imported history and generate a concise continuity-of-care note.",
       ].join("\n"),
-    );
+    });
   }
 
   return (
@@ -214,6 +224,15 @@ export function DataMigrationWizard() {
         <AlertDescription>
           All processing done with end-to-end encryption. HIPAA-ready
           architecture.
+        </AlertDescription>
+      </Alert>
+
+      <Alert>
+        <DatabaseZap className="size-4" />
+        <AlertTitle>Current Patient: {currentPatient.name}</AlertTitle>
+        <AlertDescription>
+          Migration handoffs can open imported summaries in Clinical Notes for
+          this shared patient context.
         </AlertDescription>
       </Alert>
 

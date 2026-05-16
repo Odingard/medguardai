@@ -22,7 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { usePatientStore } from "@/lib/patients/store";
+import { usePatientStore } from "@/lib/stores/patientStore";
 
 const patientModuleLinks = [
   {
@@ -48,8 +48,18 @@ const patientModuleLinks = [
 ] as const;
 
 export function PatientDirectory() {
-  const { patients, activePatientId, setActivePatient } = usePatientStore();
+  const { patients, currentPatientId, recentPatientIds, setCurrentPatient } =
+    usePatientStore();
   const [searchQuery, setSearchQuery] = useState("");
+
+  const recentPatients = useMemo(
+    () =>
+      recentPatientIds.flatMap((patientId) => {
+        const patient = patients.find((currentPatient) => currentPatient.id === patientId);
+        return patient ? [patient] : [];
+      }),
+    [patients, recentPatientIds],
+  );
 
   const filteredPatients = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -83,7 +93,24 @@ export function PatientDirectory() {
             mock record.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {recentPatients.length ? (
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                Recent patients:
+              </span>
+              {recentPatients.map((patient) => (
+                <Button
+                  key={patient.id}
+                  variant={patient.id === currentPatientId ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPatient(patient.id)}
+                >
+                  {patient.name}
+                </Button>
+              ))}
+            </div>
+          ) : null}
           <div className="relative max-w-xl">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -98,7 +125,7 @@ export function PatientDirectory() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         {filteredPatients.map((patient) => {
-          const active = patient.id === activePatientId;
+          const active = patient.id === currentPatientId;
 
           return (
             <Card
@@ -131,7 +158,7 @@ export function PatientDirectory() {
                 <div className="flex flex-wrap gap-2">
                   <Button
                     variant={active ? "default" : "outline"}
-                    onClick={() => setActivePatient(patient.id)}
+                    onClick={() => setCurrentPatient(patient.id)}
                   >
                     <ShieldCheck />
                     Set active patient
@@ -145,7 +172,7 @@ export function PatientDirectory() {
                         variant="outline"
                         size="sm"
                         asChild
-                        onClick={() => setActivePatient(patient.id)}
+                        onClick={() => setCurrentPatient(patient.id)}
                       >
                         <Link href={link.href}>
                           <Icon />

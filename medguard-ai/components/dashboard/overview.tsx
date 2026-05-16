@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowUpRight, ShieldAlert, Sparkles, UsersRound } from "lucide-react";
 
@@ -19,9 +21,14 @@ import {
   dashboardQuickActions,
 } from "@/lib/dashboard/overview-data";
 import { cyberRiskScore } from "@/lib/cyber-hygiene/data";
+import { usePatientStore } from "@/lib/stores/patientStore";
 import { cn } from "@/lib/utils";
 
 export function DashboardOverview() {
+  const { patients, currentPatientId } = usePatientStore();
+  const currentPatient =
+    patients.find((patient) => patient.id === currentPatientId) ?? patients[0];
+
   return (
     <div className="space-y-8">
       <section className="grid gap-4 xl:grid-cols-[1.8fr_1fr]">
@@ -44,19 +51,27 @@ export function DashboardOverview() {
               </CardDescription>
             </div>
           </CardHeader>
-          <CardContent className="flex flex-wrap gap-3">
-            <Button asChild>
-              <Link href="/dashboard/patients">
-                Open patient directory
-                <UsersRound />
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/smart-intake">
-                Start intake-to-note flow
-                <ArrowUpRight />
-              </Link>
-            </Button>
+          <CardContent className="space-y-4">
+            <div className="rounded-xl border bg-card/70 p-4 text-sm">
+              <p className="font-semibold">Current Patient: {currentPatient.name}</p>
+              <p className="mt-1 text-muted-foreground">
+                Quick starts will open modules with this shared patient context.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild>
+                <Link href="/dashboard/patients">
+                  Open patient directory
+                  <UsersRound />
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/smart-intake">
+                  Start intake-to-note flow
+                  <ArrowUpRight />
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

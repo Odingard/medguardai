@@ -67,7 +67,7 @@ import {
   type LegalDocumentStatus,
   type LegalDocumentTemplate,
 } from "@/lib/legal-documents/data";
-import { usePatientStore } from "@/lib/patients/store";
+import { usePatientStore } from "@/lib/stores/patientStore";
 import { cn } from "@/lib/utils";
 
 function wait(ms: number) {
@@ -253,12 +253,15 @@ export function LegalDocumentsWorkspace() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Shield className="size-5 text-primary" />
-              <CardTitle>Patient selector</CardTitle>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Shield className="size-5 text-primary" />
+                <CardTitle>Current Patient</CardTitle>
+              </div>
+              <Badge variant="success">{selectedPatient.name}</Badge>
             </div>
             <CardDescription>
-              Attach generated documents to the same mock patient records used
+              Attach generated documents to the shared patient record used
               across intake and notes.
             </CardDescription>
           </CardHeader>

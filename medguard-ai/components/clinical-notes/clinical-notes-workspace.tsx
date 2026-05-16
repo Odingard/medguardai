@@ -57,7 +57,7 @@ import {
   type NoteMode,
   type SoapNote,
 } from "@/lib/clinical-notes/data";
-import { usePatientStore } from "@/lib/patients/store";
+import { usePatientStore } from "@/lib/stores/patientStore";
 import { cn } from "@/lib/utils";
 
 function wait(ms: number) {
@@ -246,9 +246,12 @@ export function ClinicalNotesWorkspace() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Patient selector</CardTitle>
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle>Current Patient</CardTitle>
+              <Badge variant="success">{selectedPatient.name}</Badge>
+            </div>
             <CardDescription>
-              Choose a mock patient record for note generation and saving.
+              Shared patient context for note generation and saving.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

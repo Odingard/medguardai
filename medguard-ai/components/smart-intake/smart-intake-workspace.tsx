@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import {
   AlertCircle,
@@ -81,7 +82,7 @@ import {
   type IntakeFormValues,
   type IntakeTemplate,
 } from "@/lib/smart-intake/data";
-import { usePatientStore } from "@/lib/patients/store";
+import { usePatientStore } from "@/lib/stores/patientStore";
 import { cn } from "@/lib/utils";
 
 function wait(ms: number) {
@@ -101,8 +102,9 @@ export function SmartIntakeWorkspace() {
     patients,
     activePatientId,
     setActivePatient,
-    setPendingClinicalNotePrefill,
+    prepareClinicalNoteHandoff: prepareStoreClinicalNoteHandoff,
   } = usePatientStore();
+  const router = useRouter();
   const [templates, setTemplates] = useState<IntakeTemplate[]>(intakeTemplates);
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     intakeTemplates[0].id,
@@ -190,16 +192,22 @@ export function SmartIntakeWorkspace() {
   function handleSubmit(valuesToSubmit: IntakeFormValues) {
     setSubmissionSummary(summarizeIntake(valuesToSubmit));
     setPortalMessage("");
+    prepareClinicalNoteHandoffForValues(valuesToSubmit);
+    router.push("/dashboard/clinical-notes");
   }
 
-  function prepareClinicalNoteHandoff() {
+  function prepareClinicalNoteHandoffForValues(valuesToUse: IntakeFormValues) {
     const answeredFields = visibleFields
-      .map((field) => `${field.label}: ${String(values[field.id] || "Not answered")}`)
+      .map(
+        (field) =>
+          `${field.label}: ${String(valuesToUse[field.id] || "Not answered")}`,
+      )
       .join("\n");
 
-    setActivePatient(selectedPatient.id);
-    setPendingClinicalNotePrefill(
-      [
+    prepareStoreClinicalNoteHandoff({
+      patientId: selectedPatient.id,
+      source: "smart-intake",
+      prefill: [
         `Smart Intake handoff for ${selectedPatient.name}`,
         `Template: ${selectedTemplate.title}`,
         "",
@@ -207,7 +215,11 @@ export function SmartIntakeWorkspace() {
         "",
         "Generate a concise SOAP note from this intake packet and highlight any red flags.",
       ].join("\n"),
-    );
+    });
+  }
+
+  function prepareClinicalNoteHandoff() {
+    prepareClinicalNoteHandoffForValues(values);
   }
 
   function renderField(field: IntakeField) {
@@ -315,12 +327,15 @@ export function SmartIntakeWorkspace() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <User className="size-5 text-primary" />
-              <CardTitle>Patient selector</CardTitle>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <User className="size-5 text-primary" />
+                <CardTitle>Current Patient</CardTitle>
+              </div>
+              <Badge variant="success">{selectedPatient.name}</Badge>
             </div>
             <CardDescription>
-              Reuses the same mock patient pool as Clinical Notes.
+              Shared patient context reused by Clinical Notes.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

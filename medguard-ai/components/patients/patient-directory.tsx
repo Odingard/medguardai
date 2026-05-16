@@ -12,7 +12,6 @@ import {
   Grid2X2,
   List,
   Search,
-  ShieldCheck,
   UserRound,
 } from "lucide-react";
 
@@ -84,12 +83,6 @@ const moduleActions = [
     href: "/dashboard/legal-documents",
     icon: FileText,
     action: "legal" as const,
-  },
-  {
-    label: "View Cyber Profile",
-    href: "/dashboard/cyber-hygiene",
-    icon: ShieldCheck,
-    action: "cyber" as const,
   },
   {
     label: "Migrate More Data",
@@ -246,7 +239,7 @@ export function PatientDirectory() {
             setAsCurrentPatient(patient);
           }}
         >
-          <ShieldCheck />
+          <UserRound />
           Set Current
         </Button>
         <Button
@@ -372,7 +365,7 @@ export function PatientDirectory() {
                       <p className="text-muted-foreground">{metrics.visitPrep.pendingItems.join("; ")}</p>
                     </div>
                     <div>
-                      <p className="font-medium">Cyber/compliance</p>
+                      <p className="font-medium">Compliance/admin</p>
                       <p className="text-muted-foreground">{metrics.visitPrep.cyberComplianceFlags.join("; ")}</p>
                     </div>
                   </div>
@@ -607,7 +600,7 @@ export function PatientDirectory() {
                   <TableHead>Last Visit</TableHead>
                   <TableHead>Notes Count</TableHead>
                   <TableHead>Intake Pending</TableHead>
-                  <TableHead>Cyber Risk</TableHead>
+                  <TableHead>Patient Risk</TableHead>
                   <TableHead className="text-right">Quick Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -695,7 +688,7 @@ export function PatientDirectory() {
                       <p className="font-semibold">{metrics.intakePending ? "Pending" : "Clear"}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Cyber</p>
+                      <p className="text-muted-foreground">Risk</p>
                       <Badge variant="outline" className={getRiskBadgeClass(metrics.cyberRisk)}>
                         {metrics.cyberRisk}
                       </Badge>

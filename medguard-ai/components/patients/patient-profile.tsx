@@ -8,7 +8,6 @@ import {
   DatabaseZap,
   FileHeart,
   FileText,
-  ShieldCheck,
   UserRound,
 } from "lucide-react";
 
@@ -28,7 +27,6 @@ import {
 } from "@/lib/clinical-notes/data";
 import {
   getPatientCommandMetrics,
-  getRiskBadgeClass,
 } from "@/lib/patients/command-center";
 import { usePatientStore } from "@/lib/stores/patientStore";
 
@@ -100,9 +98,6 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
                 Patient Individual Profile · DOB {patient.dob} · Age {patient.age}
               </CardDescription>
               <div className="mt-3 flex flex-wrap gap-2">
-                <Badge variant="outline" className={getRiskBadgeClass(metrics.cyberRisk)}>
-                  Cyber Risk: {metrics.cyberRisk} ({metrics.cyberScore})
-                </Badge>
                 <Badge variant="outline">{metrics.notesCount} notes</Badge>
                 <Badge variant={metrics.intakePending ? "secondary" : "success"}>
                   {metrics.intakePending ? "Intake pending" : "Intake clear"}
@@ -113,7 +108,7 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           <Button onClick={() => setCurrentPatient(patient.id)}>
-            <ShieldCheck />
+            <UserRound />
             Set as Current Patient
           </Button>
           <Button asChild onClick={prepareVisitPrepHandoff}>
@@ -187,9 +182,9 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
                 </ul>
               </div>
             </div>
-            <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
-              <p className="font-semibold">Cyber / compliance flags</p>
-              <p>{metrics.visitPrep.cyberComplianceFlags.join("; ")}</p>
+            <div className="rounded-xl border bg-muted/40 p-3">
+              <p className="font-semibold">Compliance / admin reminders</p>
+              <p className="text-muted-foreground">{metrics.visitPrep.cyberComplianceFlags.join("; ")}</p>
             </div>
           </CardContent>
         </Card>
@@ -197,7 +192,8 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Notes</CardTitle>
+              <CardTitle>Clinical Notes</CardTitle>
+              <CardDescription>Recent notes and note actions for this patient.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {metrics.recentNotes.map((note) => (
@@ -212,25 +208,103 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
                   <p className="mt-1 text-sm text-muted-foreground">{note.summary}</p>
                 </Link>
               ))}
+              <Button asChild onClick={prepareVisitPrepHandoff}>
+                <Link href="/dashboard/clinical-notes">Open Clinical Notes</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Smart Intake</CardTitle>
+              <CardDescription>Recent intake packets and next intake action.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {metrics.recentIntakes.map((intake) => (
+                <Link
+                  key={intake.id}
+                  href="/dashboard/smart-intake"
+                  onClick={() => setCurrentPatient(patient.id)}
+                  className="block rounded-xl border bg-card p-3 transition-colors hover:bg-muted/50"
+                >
+                  <p className="font-medium">{intake.title}</p>
+                  <p className="text-xs text-muted-foreground">{intake.status} · {intake.date}</p>
+                </Link>
+              ))}
+              <Button variant="outline" asChild onClick={() => setCurrentPatient(patient.id)}>
+                <Link href="/dashboard/smart-intake">New Smart Intake</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Legal Documents</CardTitle>
+              <CardDescription>Active patient documents and generation actions.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {metrics.legalDocuments.map((document) => (
+                <Link
+                  key={document.id}
+                  href="/dashboard/legal-documents"
+                  onClick={() => setCurrentPatient(patient.id)}
+                  className="block rounded-xl border bg-card p-3 transition-colors hover:bg-muted/50"
+                >
+                  <p className="font-medium">{document.title}</p>
+                  <p className="text-xs text-muted-foreground">{document.status} · {document.date}</p>
+                </Link>
+              ))}
+              <Button variant="outline" asChild onClick={() => setCurrentPatient(patient.id)}>
+                <Link href="/dashboard/legal-documents">Generate Legal Document</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Migration</CardTitle>
+              <CardDescription>Legacy records and import continuation for this patient.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>Continue importing legacy documents, PDFs, scans, or EHR exports for {patient.name}.</p>
+              <Button variant="outline" asChild onClick={() => setCurrentPatient(patient.id)}>
+                <Link href="/dashboard/data-migration">Migrate More Data</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>EHR Push</CardTitle>
+              <CardDescription>Copy the latest note payload for Chrome Extension push.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>Prepare the most recent SOAP summary for EHR insertion or clipboard handoff.</p>
+              <Button variant="outline" onClick={pushLatestNoteToEhr}>
+                <Copy />
+                Push Latest Note to EHR
+              </Button>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
               <CardTitle>Timeline</CardTitle>
-              <CardDescription>Activity across MedGuard modules.</CardDescription>
+              <CardDescription>Activity across this patient workspace.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {metrics.timeline.map((event) => (
-                <div key={event.id} className="rounded-xl border bg-card p-3 text-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-medium">{event.title}</p>
-                    <Badge variant="outline">{event.module}</Badge>
+              {metrics.timeline
+                .filter((event) => event.module !== "Cyber Hygiene")
+                .map((event) => (
+                  <div key={event.id} className="rounded-xl border bg-card p-3 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-medium">{event.title}</p>
+                      <Badge variant="outline">{event.module}</Badge>
+                    </div>
+                    <p className="mt-1 text-muted-foreground">{event.detail}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{event.time}</p>
                   </div>
-                  <p className="mt-1 text-muted-foreground">{event.detail}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{event.time}</p>
-                </div>
-              ))}
+                ))}
             </CardContent>
           </Card>
         </div>

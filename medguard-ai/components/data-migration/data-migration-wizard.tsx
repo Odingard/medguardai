@@ -93,7 +93,8 @@ export function DataMigrationWizard() {
   const {
     patients,
     currentPatientId,
-    setActivePatient,
+    addPatient,
+    setCurrentPatient,
     prepareClinicalNoteHandoff,
   } = usePatientStore();
   const [currentStep, setCurrentStep] = useState<MigrationStep>("welcome");
@@ -119,6 +120,7 @@ export function DataMigrationWizard() {
     typeof simulateSecureImport
   > | null>(null);
   const [reportMessage, setReportMessage] = useState("");
+  const [importedPatientIds, setImportedPatientIds] = useState<string[]>([]);
 
   const activeStepIndex = getStepIndex(currentStep);
   const fileCount = uploadedFiles.length || 3;
@@ -128,6 +130,48 @@ export function DataMigrationWizard() {
       patients.find((patient) => patient.id === currentPatientId) ?? patients[0],
     [patients, currentPatientId],
   );
+
+  const importedPatients = useMemo(
+    () =>
+      importedPatientIds.flatMap((patientId) => {
+        const patient = patients.find((current) => current.id === patientId);
+        return patient ? [patient] : [];
+      }),
+    [importedPatientIds, patients],
+  );
+
+  function estimateAgeFromDob(dob: string) {
+    const year = Number(dob.split("/")[2]);
+    return Number.isFinite(year) ? Math.max(0, new Date().getFullYear() - year) : 0;
+  }
+
+  function resolveImportedPatients() {
+    const resolvedIds: string[] = [];
+
+    sampleDetectedRecords.forEach((record) => {
+      const existingPatient = patients.find(
+        (patient) => patient.name === record.patientName,
+      );
+
+      if (existingPatient) {
+        resolvedIds.push(existingPatient.id);
+        return;
+      }
+
+      const importedPatient = {
+        id: `mig-${record.id}`,
+        name: record.patientName,
+        age: estimateAgeFromDob(record.dob),
+        dob: record.dob,
+        reason: `Imported legacy record from ${record.source}`,
+        lastVisit: record.lastVisit,
+      };
+      addPatient(importedPatient);
+      resolvedIds.push(importedPatient.id);
+    });
+
+    return resolvedIds;
+  }
 
   function handleFiles(files: FileList | null) {
     if (!files?.length) {
@@ -183,12 +227,22 @@ export function DataMigrationWizard() {
       await wait(350);
     }
 
-    setImportResult(
-      simulateSecureImport({
-        dryRun,
-        selectedOptionCount: selectedImportOptions.length,
-      }),
-    );
+    const result = simulateSecureImport({
+      dryRun,
+      selectedOptionCount: selectedImportOptions.length,
+    });
+    setImportResult(result);
+
+    if (dryRun) {
+      setImportedPatientIds([]);
+    } else {
+      const resolvedIds = resolveImportedPatients();
+      setImportedPatientIds(resolvedIds);
+      if (resolvedIds[0]) {
+        setCurrentPatient(resolvedIds[0]);
+      }
+    }
+
     setIsImporting(false);
     setCurrentStep("results");
   }
@@ -203,7 +257,7 @@ export function DataMigrationWizard() {
 
     const patientId = patient?.id ?? currentPatient.id;
 
-    setActivePatient(patientId);
+    setCurrentPatient(patientId);
     prepareClinicalNoteHandoff({
       patientId,
       source: "data-migration",
@@ -657,6 +711,15 @@ export function DataMigrationWizard() {
                   </p>
                 </div>
               </div>
+              <Alert variant="warning">
+                <AlertTriangle className="size-4" />
+                <AlertTitle>Security checkpoint</AlertTitle>
+                <AlertDescription>
+                  Import simulation keeps review checkpoints before write, tracks
+                  source files for auditability, and should only be connected to
+                  signed BAAs and HIPAA-approved storage in production.
+                </AlertDescription>
+              </Alert>
               <Button onClick={handleStartImport} disabled={isImporting}>
                 {isImporting ? (
                   <RefreshCw className="animate-spin" />
@@ -745,6 +808,37 @@ export function DataMigrationWizard() {
                   </p>
                 </div>
               </div>
+              {importedPatients.length ? (
+                <div className="rounded-xl border bg-card p-4">
+                  <p className="font-semibold">Imported / matched patient records</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {importedPatients.map((patient) => (
+                      <div key={patient.id} className="flex flex-wrap gap-2 rounded-lg border p-2">
+                        <span className="px-2 py-1 text-sm font-medium">{patient.name}</span>
+                        <Button size="sm" variant="outline" asChild>
+                          <Link href={`/dashboard/patients?patient=${patient.id}`}>
+                            View in Patients
+                          </Link>
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            prepareClinicalNotesView(
+                              patient.name,
+                              `Imported legacy summary for ${patient.name}. Review source records and continue the clinical note.`,
+                            )
+                          }
+                          asChild
+                        >
+                          <Link href="/dashboard/clinical-notes">
+                            View in Clinical Notes
+                          </Link>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               <Button
                 onClick={() => setReportMessage(mockDownloadReport())}
                 variant="outline"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useForm, useWatch } from "react-hook-form";
 import {
@@ -151,11 +151,12 @@ export function SmartIntakeWorkspace() {
   );
   const redFlags = detectRedFlags(values);
 
-  useEffect(() => {
-    form.reset(getTemplateDefaults(selectedTemplate));
+  function handleSelectTemplate(template: IntakeTemplate) {
+    setSelectedTemplateId(template.id);
+    form.reset(getTemplateDefaults(template));
     setSubmissionSummary("");
     setPortalMessage("");
-  }, [form, selectedTemplate]);
+  }
 
   async function handleSmartBuilder() {
     setIsBuilding(true);
@@ -166,7 +167,7 @@ export function SmartIntakeWorkspace() {
       generatedTemplate,
       ...current.filter((template) => template.id !== generatedTemplate.id),
     ]);
-    setSelectedTemplateId(generatedTemplate.id);
+    handleSelectTemplate(generatedTemplate);
     setBuilderOpen(false);
     setIsBuilding(false);
   }
@@ -409,7 +410,7 @@ export function SmartIntakeWorkspace() {
                   <button
                     key={template.id}
                     type="button"
-                    onClick={() => setSelectedTemplateId(template.id)}
+                    onClick={() => handleSelectTemplate(template)}
                     className={cn(
                       "w-full rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary hover:bg-secondary/50",
                       active && "border-primary bg-secondary",

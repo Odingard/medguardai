@@ -133,7 +133,6 @@ export const specialtyTemplates = [
   "Orthopedics",
   "OB/GYN",
   "Dermatology",
-  "Cardiology",
   "Neurology",
 ] as const;
 

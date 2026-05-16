@@ -2,6 +2,13 @@ import type { MockPatient } from "@/lib/clinical-notes/data";
 
 export type PatientRiskLevel = "Low" | "Medium" | "High";
 
+export type VisitPrepSummary = {
+  summary: string;
+  medications: string[];
+  pendingItems: string[];
+  followUps: string[];
+};
+
 export type PatientCommandMetrics = {
   notesCount: number;
   intakePending: boolean;
@@ -33,6 +40,7 @@ export type PatientCommandMetrics = {
     detail: string;
     time: string;
   }>;
+  visitPrep: VisitPrepSummary;
 };
 
 const patientMetrics: Record<string, PatientCommandMetrics> = {
@@ -72,6 +80,13 @@ const patientMetrics: Record<string, PatientCommandMetrics> = {
         date: "May 15, 2026",
       },
     ],
+visitPrep: {
+      summary:
+        "Hypertension follow-up patient with recent controlled home BP readings and lifestyle improvements. Watch medication adherence and lab follow-through.",
+      medications: ["Lisinopril 10 mg daily", "Metformin 500 mg twice daily"],
+      pendingItems: ["Repeat BMP", "Confirm home BP log", "Review front-desk mailbox exposure task"],
+      followUps: ["Primary care follow-up in 3 months", "Lifestyle counseling: sodium and walking"],
+    },
     timeline: [
       {
         id: "timeline-elena-1",
@@ -119,6 +134,13 @@ const patientMetrics: Record<string, PatientCommandMetrics> = {
         date: "May 14, 2026",
       },
     ],
+visitPrep: {
+      summary:
+        "Diabetes medication review patient with stable adherence but pending A1C follow-up. No active intake blockers.",
+      medications: ["Metformin 500 mg twice daily", "Atorvastatin 20 mg nightly"],
+      pendingItems: ["A1C lab result", "Foot exam documentation", "Eye exam status"],
+      followUps: ["Endocrine-style medication review", "Nutrition coaching if A1C elevated"],
+    },
     timeline: [
       {
         id: "timeline-marcus-1",
@@ -159,6 +181,13 @@ const patientMetrics: Record<string, PatientCommandMetrics> = {
         date: "May 16, 2026",
       },
     ],
+visitPrep: {
+      summary:
+        "Telehealth URI follow-up patient with improving symptoms and consent workflow in progress. Cyber profile flags higher patient-context risk due to portal activity.",
+      medications: ["Supportive OTC care", "No antibiotic documented"],
+      pendingItems: ["Confirm telehealth consent", "Review portal message", "Return precautions acknowledged"],
+      followUps: ["Telehealth check-in if symptoms worsen", "Complete consent signature"],
+    },
     timeline: [
       {
         id: "timeline-ava-1",
@@ -189,6 +218,12 @@ export function getPatientCommandMetrics(patient: MockPatient) {
       recentNotes: [],
       recentIntakes: [],
       legalDocuments: [],
+      visitPrep: {
+        summary: `${patient.name} was recently added. Review imported context, medications, and pending tasks before the visit.`,
+        medications: ["Not documented"],
+        pendingItems: ["Confirm demographics", "Review source records"],
+        followUps: ["Create first clinical note"],
+      },
       timeline: [
         {
           id: `${patient.id}-created`,

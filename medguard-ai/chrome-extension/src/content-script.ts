@@ -17,7 +17,7 @@ function createPushButton() {
   const button = document.createElement("button");
   button.id = "medguard-ehr-push-button";
   button.type = "button";
-  button.textContent = "MedGuard";
+  button.textContent = "MedGuard Push";
   button.title = `Push latest MedGuard note into ${ehr.name}`;
   button.addEventListener("click", handlePushClick);
   document.body.appendChild(button);
@@ -78,7 +78,7 @@ async function handlePushClick() {
   }
 
   window.setTimeout(() => {
-    button.textContent = "MedGuard";
+    button.textContent = "MedGuard Push";
   }, 1800);
 }
 

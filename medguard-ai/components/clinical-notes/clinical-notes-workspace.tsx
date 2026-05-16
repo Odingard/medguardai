@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import { generateClinicalSoapNoteAction } from "@/app/dashboard/clinical-notes/actions";
+import {
+  generateClinicalSoapNoteAction,
+  generatePatientInstructionsAction,
+  generateReferralLetterAction,
+  magicEditClinicalNoteAction,
+} from "@/app/dashboard/clinical-notes/actions";
 import {
   CheckCircle2,
   ClipboardCopy,
@@ -128,6 +133,11 @@ export function ClinicalNotesWorkspace() {
   const [aiProviderLabel, setAiProviderLabel] = useState("Mock fallback");
   const [aiWarning, setAiWarning] = useState("");
   const [aiError, setAiError] = useState("");
+  const [secondaryOutput, setSecondaryOutput] = useState("");
+  const [magicEditPrompt, setMagicEditPrompt] = useState(
+    "Make this note more concise and ready for EHR sign-off.",
+  );
+  const [isSecondaryGenerating, setIsSecondaryGenerating] = useState(false);
   const [statusMessage, setStatusMessage] = useState(
     pendingClinicalNotePrefill
       ? "Smart Intake handoff loaded. Review the prefill, then generate the SOAP note."
@@ -151,6 +161,22 @@ export function ClinicalNotesWorkspace() {
       clinicalTemplates[0],
     [selectedTemplateId],
   );
+
+  function getClinicalActionInput(instruction?: string) {
+    return {
+      patient: selectedPatient,
+      template: {
+        id: selectedTemplate.id,
+        title: selectedTemplate.title,
+        description: selectedTemplate.description,
+        prompt: selectedTemplate.prompt,
+      },
+      specialty: selectedSpecialty,
+      encounterInput,
+      note: soapNote,
+      instruction,
+    };
+  }
 
   async function handleStartAmbient() {
     setMode("voice");
@@ -249,17 +275,7 @@ export function ClinicalNotesWorkspace() {
     setStatusMessage("Generating SOAP note with MedGuard AI...");
 
     try {
-      const result = await generateClinicalSoapNoteAction({
-        patient: selectedPatient,
-        template: {
-          id: selectedTemplate.id,
-          title: selectedTemplate.title,
-          description: selectedTemplate.description,
-          prompt: selectedTemplate.prompt,
-        },
-        specialty: selectedSpecialty,
-        encounterInput,
-      });
+      const result = await generateClinicalSoapNoteAction(getClinicalActionInput());
 
       setSoapNote(result.note);
       setAiProviderLabel(`${result.provider} / ${result.model}`);
@@ -277,6 +293,50 @@ export function ClinicalNotesWorkspace() {
       setStatusMessage("Clinical note generation failed.");
     } finally {
       setIsGenerating(false);
+    }
+  }
+
+  async function handleGeneratePatientInstructions() {
+    setIsSecondaryGenerating(true);
+    setAiError("");
+    try {
+      const result = await generatePatientInstructionsAction(getClinicalActionInput());
+      setSecondaryOutput(result.text);
+      setStatusMessage(`Patient instructions generated with ${result.provider} / ${result.model}.`);
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : "Unable to generate patient instructions.");
+    } finally {
+      setIsSecondaryGenerating(false);
+    }
+  }
+
+  async function handleGenerateReferralLetter() {
+    setIsSecondaryGenerating(true);
+    setAiError("");
+    try {
+      const result = await generateReferralLetterAction(getClinicalActionInput());
+      setSecondaryOutput(result.text);
+      setStatusMessage(`Referral letter generated with ${result.provider} / ${result.model}.`);
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : "Unable to generate referral letter.");
+    } finally {
+      setIsSecondaryGenerating(false);
+    }
+  }
+
+  async function handleMagicEdit() {
+    setIsSecondaryGenerating(true);
+    setAiError("");
+    try {
+      const result = await magicEditClinicalNoteAction(
+        getClinicalActionInput(magicEditPrompt),
+      );
+      setSecondaryOutput(result.text);
+      setStatusMessage(`Magic Edit generated with ${result.provider} / ${result.model}.`);
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : "Unable to run Magic Edit.");
+    } finally {
+      setIsSecondaryGenerating(false);
     }
   }
 
@@ -632,6 +692,46 @@ export function ClinicalNotesWorkspace() {
                 <p className="rounded-md border border-destructive/50 px-3 py-2 text-sm text-destructive">
                   {aiError}
                 </p>
+              ) : null}
+              <div className="grid gap-3 rounded-xl border bg-card/80 p-4 lg:grid-cols-3">
+                <Button
+                  variant="outline"
+                  onClick={handleGeneratePatientInstructions}
+                  disabled={isSecondaryGenerating}
+                >
+                  <Sparkles />
+                  Generate Patient Instructions
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateReferralLetter}
+                  disabled={isSecondaryGenerating}
+                >
+                  <FileText />
+                  Generate Referral Letter
+                </Button>
+                <div className="space-y-2">
+                  <Textarea
+                    value={magicEditPrompt}
+                    onChange={(event) => setMagicEditPrompt(event.target.value)}
+                    className="min-h-20"
+                  />
+                  <Button
+                    className="w-full"
+                    onClick={handleMagicEdit}
+                    disabled={isSecondaryGenerating}
+                  >
+                    {isSecondaryGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                    Magic Edit
+                  </Button>
+                </div>
+              </div>
+              {secondaryOutput ? (
+                <Textarea
+                  value={secondaryOutput}
+                  onChange={(event) => setSecondaryOutput(event.target.value)}
+                  className="min-h-44"
+                />
               ) : null}
             </div>
           </CardContent>

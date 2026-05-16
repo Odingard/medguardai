@@ -23,6 +23,7 @@ import {
   dashboardQuickActions,
 } from "@/lib/dashboard/overview-data";
 import { cyberRiskScore } from "@/lib/cyber-hygiene/data";
+import { getPatientCommandMetrics } from "@/lib/patients/command-center";
 import { useOnboardingStore } from "@/lib/stores/onboardingStore";
 import { usePatientStore } from "@/lib/stores/patientStore";
 import { useSubscriptionStore } from "@/lib/stores/subscriptionStore";
@@ -36,6 +37,7 @@ export function DashboardOverview() {
   );
   const currentPatient =
     patients.find((patient) => patient.id === currentPatientId) ?? patients[0];
+  const visitPrep = getPatientCommandMetrics(currentPatient).visitPrep;
 
   return (
     <div className="space-y-8">
@@ -62,10 +64,22 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-xl border bg-card/70 p-4 text-sm">
-              <p className="font-semibold">Current Patient: {currentPatient.name}</p>
-              <p className="mt-1 text-muted-foreground">
-                Quick starts will open modules with this shared patient context.
-              </p>
+              <p className="font-semibold">Visit Prep: {currentPatient.name}</p>
+              <p className="mt-1 text-muted-foreground">{visitPrep.summary}</p>
+              <div className="mt-3 grid gap-2 md:grid-cols-3">
+                <div>
+                  <p className="font-medium">Medications</p>
+                  <p className="text-muted-foreground">{visitPrep.medications.join(", ")}</p>
+                </div>
+                <div>
+                  <p className="font-medium">Pending</p>
+                  <p className="text-muted-foreground">{visitPrep.pendingItems[0]}</p>
+                </div>
+                <div>
+                  <p className="font-medium">Follow-up</p>
+                  <p className="text-muted-foreground">{visitPrep.followUps[0]}</p>
+                </div>
+              </div>
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild>

@@ -195,6 +195,94 @@ export const intakeTemplates: IntakeTemplate[] = [
       ...sharedSafetyFields,
     ],
   },
+  {
+    id: "cardiology-intake",
+    title: "Cardiology Intake",
+    category: "Specialty-specific",
+    description:
+      "Chest symptoms, BP trends, cardiac history, medication tolerance, and red flags.",
+    icon: HeartPulse,
+    fields: [
+      {
+        id: "cardiacSymptoms",
+        label: "Chest pain, palpitations, shortness of breath, or edema?",
+        type: "textarea",
+        placeholder: "Describe timing, exertional pattern, severity, and associated symptoms",
+      },
+      {
+        id: "bloodPressureTrend",
+        label: "Recent blood pressure trend",
+        type: "select",
+        options: ["Controlled", "Elevated", "Low", "Not checking"],
+      },
+      {
+        id: "cardiacMeds",
+        label: "Cardiac medications and tolerance",
+        type: "textarea",
+      },
+      ...sharedSafetyFields,
+    ],
+  },
+  {
+    id: "orthopedic-intake",
+    title: "Orthopedic Intake",
+    category: "Specialty-specific",
+    description:
+      "Pain location, injury mechanism, function limits, imaging, and procedure readiness.",
+    icon: Activity,
+    fields: [
+      {
+        id: "painLocation",
+        label: "Pain location and duration",
+        type: "text",
+        required: true,
+      },
+      {
+        id: "injuryMechanism",
+        label: "Injury mechanism",
+        type: "textarea",
+        placeholder: "Fall, sports injury, overuse, post-op, no known injury...",
+      },
+      {
+        id: "functionalLimitations",
+        label: "Functional limitations",
+        type: "textarea",
+      },
+      ...sharedSafetyFields,
+    ],
+  },
+  {
+    id: "behavioral-health-intake",
+    title: "Behavioral Health Intake",
+    category: "Specialty-specific",
+    description:
+      "Mood symptoms, sleep, medication response, therapy goals, and safety screen.",
+    icon: Stethoscope,
+    fields: [
+      {
+        id: "moodSymptoms",
+        label: "Current mood or anxiety symptoms",
+        type: "textarea",
+        required: true,
+      },
+      {
+        id: "safetyConcern",
+        label: "Any self-harm or safety concern?",
+        type: "select",
+        options: ["No", "Yes"],
+      },
+      {
+        id: "safetyDetails",
+        label: "Safety details",
+        type: "textarea",
+        showWhen: {
+          fieldId: "safetyConcern",
+          equals: "Yes",
+        },
+      },
+      ...sharedSafetyFields,
+    ],
+  },
 ] as const;
 
 export const completedIntakes = [
@@ -327,6 +415,10 @@ export function detectRedFlags(values: IntakeFormValues) {
 
   if (values.hypoglycemia === "Yes") {
     flags.push("Diabetes safety flag: hypoglycemia requires provider review.");
+  }
+
+  if (values.safetyConcern === "Yes") {
+    flags.push("Behavioral health safety flag — provider review before routine workflow.");
   }
 
   return flags;

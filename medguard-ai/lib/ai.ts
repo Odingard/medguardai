@@ -206,3 +206,156 @@ export async function generateClinicalSoapNote(
     };
   }
 }
+
+
+export type ClinicalTextGenerationInput = ClinicalNoteGenerationInput & {
+  note?: SoapNote | null;
+  instruction?: string;
+};
+
+function formatNoteForPrompt(note?: SoapNote | null) {
+  if (!note) {
+    return "No generated SOAP note yet.";
+  }
+
+  return [
+    "SUBJECTIVE",
+    note.subjective,
+    "OBJECTIVE",
+    note.objective,
+    "ASSESSMENT",
+    note.assessment,
+    "PLAN",
+    note.plan,
+    `Billing: ${note.billingCodes.join(", ")}`,
+    `ICD-10: ${note.icdCodes.join(", ")}`,
+  ].join("\n");
+}
+
+async function generateClinicalText({
+  input,
+  task,
+}: {
+  input: ClinicalTextGenerationInput;
+  task: string;
+}) {
+  const prompt = [
+    task,
+    "",
+    buildUserPrompt(input),
+    "",
+    "Current note:",
+    formatNoteForPrompt(input.note),
+    input.instruction ? `Instruction: ${input.instruction}` : "",
+  ].join("\n");
+
+  try {
+    if (process.env.OPENAI_API_KEY) {
+      const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const model = process.env.OPENAI_MODEL || "gpt-4o";
+      const completion = await client.chat.completions.create({
+        model,
+        temperature: 0.2,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are MedGuard AI. Produce concise, medically careful clinical text for provider review. Do not invent facts.",
+          },
+          { role: "user", content: prompt },
+        ],
+      });
+
+      return {
+        text: completion.choices[0]?.message?.content || "No AI text returned.",
+        provider: "openai" as const,
+        model,
+      };
+    }
+
+    if (process.env.ANTHROPIC_API_KEY) {
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const model = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-latest";
+      const message = await client.messages.create({
+        model,
+        max_tokens: 1200,
+        temperature: 0.2,
+        system:
+          "You are MedGuard AI. Produce concise, medically careful clinical text for provider review. Do not invent facts.",
+        messages: [{ role: "user", content: prompt }],
+      });
+
+      return {
+        text: message.content
+          .map((block) => (block.type === "text" ? block.text : ""))
+          .join("\n")
+          .trim(),
+        provider: "anthropic" as const,
+        model,
+      };
+    }
+  } catch (error) {
+    return {
+      text:
+        error instanceof Error
+          ? `AI provider failed: ${error.message}. Mock fallback used.\n\n${mockClinicalText(input, task)}`
+          : mockClinicalText(input, task),
+      provider: "mock" as const,
+      model: "mock-clinical-text-v1",
+    };
+  }
+
+  return {
+    text: mockClinicalText(input, task),
+    provider: "mock" as const,
+    model: "mock-clinical-text-v1",
+  };
+}
+
+function mockClinicalText(input: ClinicalTextGenerationInput, task: string) {
+  if (task.includes("patient instructions")) {
+    return [
+      `Patient Instructions for ${input.patient.name}`,
+      "- Continue medications as discussed unless your clinician changes them.",
+      "- Monitor symptoms and follow the care plan from today's visit.",
+      "- Seek urgent care for chest pain, severe shortness of breath, fainting, or worsening symptoms.",
+      "- Follow up as scheduled and complete any ordered labs or referrals.",
+    ].join("\n");
+  }
+
+  if (task.includes("referral letter")) {
+    return [
+      `Referral Letter: ${input.patient.name}`,
+      `Reason for referral: ${input.patient.reason}`,
+      "Clinical summary: Please evaluate and advise based on the attached MedGuard AI provider-reviewed note.",
+      "Pertinent details: See SOAP assessment and plan. No additional facts should be assumed from this draft.",
+    ].join("\n");
+  }
+
+  return [
+    "Magic Edit Result",
+    input.instruction || "Refine the note for clarity and provider review.",
+    "Updated note should remain concise, factual, and ready for clinician sign-off.",
+  ].join("\n");
+}
+
+export async function generatePatientInstructions(input: ClinicalTextGenerationInput) {
+  return generateClinicalText({
+    input,
+    task: "Generate patient instructions in plain language from the current visit and SOAP note.",
+  });
+}
+
+export async function generateReferralLetter(input: ClinicalTextGenerationInput) {
+  return generateClinicalText({
+    input,
+    task: "Generate a referral letter for the appropriate specialist from the current visit and SOAP note.",
+  });
+}
+
+export async function magicEditClinicalNote(input: ClinicalTextGenerationInput) {
+  return generateClinicalText({
+    input,
+    task: "Magic edit this clinical note according to the instruction while preserving medical accuracy.",
+  });
+}

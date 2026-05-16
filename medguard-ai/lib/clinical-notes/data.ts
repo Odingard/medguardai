@@ -98,6 +98,27 @@ export const clinicalTemplates: ClinicalTemplate[] = [
     icon: Laptop,
     prompt: "Telehealth encounter with remote assessment and plan.",
   },
+  {
+    id: "cardiology-follow-up",
+    title: "Cardiology Follow-up",
+    description: "Chest symptoms, BP, medication tolerance, and cardiac risk review.",
+    icon: FileHeart,
+    prompt: "Cardiology follow-up with risk factors, symptoms, testing, and medication plan.",
+  },
+  {
+    id: "endocrinology-diabetes",
+    title: "Endocrinology / Diabetes",
+    description: "A1C, glucose trends, medication adherence, foot/eye checks.",
+    icon: ClipboardList,
+    prompt: "Diabetes-focused visit with glucose trends, complications, labs, and medication plan.",
+  },
+  {
+    id: "behavioral-health",
+    title: "Behavioral Health",
+    description: "Mood symptoms, safety screen, medication response, therapy plan.",
+    icon: Stethoscope,
+    prompt: "Behavioral health follow-up with symptom severity, safety, medications, and therapy plan.",
+  },
 ] as const;
 
 export const specialtyTemplates = [
@@ -109,6 +130,11 @@ export const specialtyTemplates = [
   "Endocrinology",
   "Behavioral Health",
   "Urgent Care",
+  "Orthopedics",
+  "OB/GYN",
+  "Dermatology",
+  "Cardiology",
+  "Neurology",
 ] as const;
 
 export const transcriptionSegments = [

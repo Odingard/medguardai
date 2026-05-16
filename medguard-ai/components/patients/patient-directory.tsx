@@ -335,6 +335,15 @@ export function PatientDirectory() {
                 <p><span className="font-medium">DOB:</span> {profilePatient.dob}</p>
                 <p><span className="font-medium">Last visit:</span> {profilePatient.lastVisit}</p>
                 <p><span className="font-medium">Current reason:</span> {profilePatient.reason}</p>
+                <div className="rounded-xl border bg-muted/40 p-3">
+                  <p className="font-semibold">Visit Prep</p>
+                  <p className="mt-1 text-muted-foreground">{metrics.visitPrep.summary}</p>
+                  <ul className="mt-2 list-inside list-disc text-muted-foreground">
+                    {metrics.visitPrep.pendingItems.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
                 {renderQuickActions(profilePatient)}
               </CardContent>
             </Card>

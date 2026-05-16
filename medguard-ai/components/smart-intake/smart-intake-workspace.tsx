@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import {
   AlertCircle,
   CheckCircle2,
@@ -145,7 +145,7 @@ export function SmartIntakeWorkspace() {
     defaultValues: getTemplateDefaults(selectedTemplate),
   });
 
-  const values = form.watch();
+  const values = useWatch({ control: form.control }) as IntakeFormValues;
   const visibleFields = selectedTemplate.fields.filter((field) =>
     shouldShowField(field, values),
   );

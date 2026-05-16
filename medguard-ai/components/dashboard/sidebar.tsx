@@ -37,7 +37,7 @@ export function DashboardSidebar() {
               className={cn(
                 "group flex items-center justify-between rounded-xl px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
                 isActive && "bg-primary text-primary-foreground shadow-sm",
-                item.featured &&
+                "featured" in item && item.featured &&
                   !isActive &&
                   "border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200",
               )}

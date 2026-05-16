@@ -24,7 +24,7 @@ export function DashboardMobileNav() {
             className={cn(
               "shrink-0 rounded-full border px-4 py-2 text-sm font-medium text-muted-foreground",
               isActive && "bg-primary text-primary-foreground",
-              item.featured &&
+              "featured" in item && item.featured &&
                 !isActive &&
                 "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200",
             )}

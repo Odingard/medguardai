@@ -1,8 +1,13 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import {
+  demoSessionCookieName,
+  demoSessionCookieValue,
+  isDemoAuthEnabled,
+} from "@/lib/auth/demo";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -44,7 +49,27 @@ export async function signInWithMagicLink(formData: FormData) {
   );
 }
 
+export async function signInDemoMode() {
+  if (!isDemoAuthEnabled()) {
+    redirect("/login?message=Demo%20mode%20is%20disabled");
+  }
+
+  const cookieStore = await cookies();
+  cookieStore.set(demoSessionCookieName, demoSessionCookieValue, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 8,
+  });
+
+  redirect("/dashboard");
+}
+
 export async function signOut() {
+  const cookieStore = await cookies();
+  cookieStore.delete(demoSessionCookieName);
+
   if (hasSupabaseConfig()) {
     const supabase = await createClient();
     await supabase.auth.signOut();

@@ -1,6 +1,6 @@
-import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
+import { ArrowRight, FlaskConical, LockKeyhole, Mail } from "lucide-react";
 
-import { signInWithMagicLink } from "@/app/login/actions";
+import { signInDemoMode, signInWithMagicLink } from "@/app/login/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,6 +59,15 @@ export function LoginForm({ message }: LoginFormProps) {
             <ArrowRight />
           </Button>
         </form>
+        <form action={signInDemoMode} className="mt-3">
+          <Button type="submit" variant="outline" className="w-full">
+            <FlaskConical />
+            Continue in Demo Mode
+          </Button>
+        </form>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Use Demo Mode when Supabase email delivery is not configured locally.
+        </p>
         <div className="mt-6 flex items-start gap-3 rounded-lg bg-secondary/60 p-4 text-sm text-secondary-foreground">
           <LockKeyhole className="mt-0.5 size-4 shrink-0" />
           <p>

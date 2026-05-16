@@ -1,6 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import {
+  demoSessionCookieName,
+  demoSessionCookieValue,
+  isDemoAuthEnabled,
+} from "@/lib/auth/demo";
+
 import { getSupabaseConfig, hasSupabaseConfig } from "./config";
 
 export async function updateSession(request: NextRequest) {
@@ -8,7 +14,15 @@ export async function updateSession(request: NextRequest) {
   const isProtectedRoute = request.nextUrl.pathname.startsWith("/dashboard");
   const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
 
-  if (!hasSupabaseConfig()) {
+  const hasDemoSession =
+    isDemoAuthEnabled() &&
+    request.cookies.get(demoSessionCookieName)?.value === demoSessionCookieValue;
+
+  if (hasDemoSession && isAuthRoute) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  if (hasDemoSession || !hasSupabaseConfig()) {
     return response;
   }
 

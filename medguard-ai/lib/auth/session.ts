@@ -1,5 +1,11 @@
+import { cookies } from "next/headers";
 import type { User } from "@supabase/supabase-js";
 
+import {
+  demoSessionCookieName,
+  demoSessionCookieValue,
+  isDemoAuthEnabled,
+} from "@/lib/auth/demo";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,7 +42,12 @@ function getRole(user: User): PracticeRole {
 }
 
 export async function getDashboardUser(): Promise<DashboardUser> {
-  if (!hasSupabaseConfig()) {
+  const cookieStore = await cookies();
+  const hasDemoSession =
+    isDemoAuthEnabled() &&
+    cookieStore.get(demoSessionCookieName)?.value === demoSessionCookieValue;
+
+  if (hasDemoSession || !hasSupabaseConfig()) {
     return demoUser;
   }
 

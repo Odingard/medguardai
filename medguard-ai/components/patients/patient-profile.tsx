@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -35,11 +36,21 @@ type PatientProfileProps = {
 };
 
 export function PatientProfile({ patientId }: PatientProfileProps) {
-  const { patients, currentPatientId, setCurrentPatient, prepareClinicalNoteHandoff } =
-    usePatientStore();
+  const {
+    patients,
+    currentPatientId,
+    openPatientWorkspace,
+    setCurrentPatient,
+    prepareClinicalNoteHandoff,
+  } = usePatientStore();
   const patient = patients.find((item) => item.id === patientId) ?? patients[0];
   const metrics = getPatientCommandMetrics(patient);
   const active = patient.id === currentPatientId;
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => openPatientWorkspace(patient.id), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [openPatientWorkspace, patient.id]);
 
   function prepareVisitPrepHandoff() {
     const prep = metrics.visitPrep;

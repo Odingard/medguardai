@@ -175,7 +175,7 @@ export function PatientDirectory() {
 
   function openProfile(patient: MockPatient) {
     setAsCurrentPatient(patient);
-    router.push(`/dashboard/patients/${patient.id}`);
+    router.push(`/dashboard/patient/${patient.id}`);
   }
 
   function togglePatientSelection(patientId: string, checked: boolean) {
@@ -258,7 +258,7 @@ export function PatientDirectory() {
             setAsCurrentPatient(patient);
           }}
         >
-          <Link href={`/dashboard/patients/${patient.id}`}>
+          <Link href={`/dashboard/patient/${patient.id}`}>
             <UserRound />
             View Profile
           </Link>

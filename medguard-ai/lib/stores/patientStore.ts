@@ -24,9 +24,12 @@ type PatientStore = {
   currentPatientId: string;
   recentPatientIds: string[];
   clinicalNoteHandoff: ClinicalNoteHandoff | null;
+  patientWorkspaceOpen: boolean;
   activePatientId: string;
   pendingClinicalNotePrefill: string;
   setCurrentPatient: (patientId: string) => void;
+  openPatientWorkspace: (patientId: string) => void;
+  closePatientWorkspace: () => void;
   setActivePatient: (patientId: string) => void;
   addPatient: (patient: MockPatient) => void;
   prepareClinicalNoteHandoff: (handoff: ClinicalNoteHandoff) => void;
@@ -48,6 +51,7 @@ export const usePatientStore = create<PatientStore>()(
       patients: mockPatients,
       currentPatientId: mockPatients[0].id,
       activePatientId: mockPatients[0].id,
+      patientWorkspaceOpen: false,
       recentPatientIds: [mockPatients[0].id],
       clinicalNoteHandoff: null,
       pendingClinicalNotePrefill: "",
@@ -55,12 +59,23 @@ export const usePatientStore = create<PatientStore>()(
         set((state) => ({
           currentPatientId: patientId,
           activePatientId: patientId,
+          patientWorkspaceOpen: true,
           recentPatientIds: withRecentPatient(patientId, state.recentPatientIds),
         })),
+      openPatientWorkspace: (patientId) =>
+        set((state) => ({
+          currentPatientId: patientId,
+          activePatientId: patientId,
+          patientWorkspaceOpen: true,
+          recentPatientIds: withRecentPatient(patientId, state.recentPatientIds),
+        })),
+      closePatientWorkspace: () =>
+        set({ patientWorkspaceOpen: false, clinicalNoteHandoff: null, pendingClinicalNotePrefill: "" }),
       setActivePatient: (patientId) =>
         set((state) => ({
           currentPatientId: patientId,
           activePatientId: patientId,
+          patientWorkspaceOpen: true,
           recentPatientIds: withRecentPatient(patientId, state.recentPatientIds),
         })),
       addPatient: (patient) =>
@@ -68,12 +83,14 @@ export const usePatientStore = create<PatientStore>()(
           patients: [patient, ...state.patients],
           currentPatientId: patient.id,
           activePatientId: patient.id,
+          patientWorkspaceOpen: true,
           recentPatientIds: withRecentPatient(patient.id, state.recentPatientIds),
         })),
       prepareClinicalNoteHandoff: (handoff) =>
         set((state) => ({
           currentPatientId: handoff.patientId,
           activePatientId: handoff.patientId,
+          patientWorkspaceOpen: true,
           recentPatientIds: withRecentPatient(
             handoff.patientId,
             state.recentPatientIds,
@@ -94,6 +111,7 @@ export const usePatientStore = create<PatientStore>()(
         patients: state.patients,
         currentPatientId: state.currentPatientId,
         activePatientId: state.activePatientId,
+        patientWorkspaceOpen: state.patientWorkspaceOpen,
         recentPatientIds: state.recentPatientIds,
         clinicalNoteHandoff: state.clinicalNoteHandoff,
         pendingClinicalNotePrefill: state.pendingClinicalNotePrefill,

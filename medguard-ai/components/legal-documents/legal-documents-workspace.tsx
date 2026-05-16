@@ -307,7 +307,7 @@ export function LegalDocumentsWorkspace() {
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               <Button variant="outline" className="w-full" asChild>
-                <Link href={`/dashboard/patients/${selectedPatient.id}`}>
+                <Link href={`/dashboard/patient/${selectedPatient.id}`}>
                   View patient profile
                 </Link>
               </Button>
@@ -598,7 +598,7 @@ export function LegalDocumentsWorkspace() {
                           asChild
                           onClick={() => selectHistoryPatient(document.patient)}
                         >
-                          <Link href={`/dashboard/patients/${historyPatient.id}`}>
+                          <Link href={`/dashboard/patient/${historyPatient.id}`}>
                             {document.patient}
                           </Link>
                         </Button>

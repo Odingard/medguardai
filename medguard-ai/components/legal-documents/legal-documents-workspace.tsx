@@ -84,7 +84,7 @@ const statusStyles: Record<LegalDocumentStatus, string> = {
 };
 
 export function LegalDocumentsWorkspace() {
-  const { patients, activePatientId, setActivePatient } = usePatientStore();
+  const { patients, currentPatientId, setCurrentPatient } = usePatientStore();
   const [templates, setTemplates] = useState<LegalDocumentTemplate[]>(
     legalDocumentTemplates,
   );
@@ -119,8 +119,8 @@ export function LegalDocumentsWorkspace() {
 
   const selectedPatient = useMemo(
     () =>
-      patients.find((patient) => patient.id === activePatientId) ?? patients[0],
-    [patients, activePatientId],
+      patients.find((patient) => patient.id === currentPatientId) ?? patients[0],
+    [patients, currentPatientId],
   );
 
   const filteredTemplates = useMemo(() => {
@@ -176,20 +176,37 @@ export function LegalDocumentsWorkspace() {
     setCustomClausesField(customPrompt);
     setBuilderOpen(false);
     setIsBuilding(false);
-    setStatusMessage("AI custom template created and selected.");
+    setStatusMessage(
+      `${customTemplate.title} created from AI prompt and selected for ${selectedPatient.name}.`,
+    );
   }
 
   function handlePatientChange(patientId: string) {
     const patient =
       patients.find((currentPatient) => currentPatient.id === patientId) ??
       patients[0];
-    setActivePatient(patientId);
+    setCurrentPatient(patientId);
     setPatientNameField(patient.name);
+    setStatusMessage(
+      `${patient.name} selected. New documents will pre-fill this patient context.`,
+    );
+  }
+
+  function selectHistoryPatient(patientName: string) {
+    const patient = patients.find(
+      (currentPatient) => currentPatient.name === patientName,
+    );
+
+    if (patient) {
+      handlePatientChange(patient.id);
+    }
   }
 
   function handleGeneratePdf() {
     const title = generatedDocument?.title ?? selectedTemplate.title;
-    setStatusMessage(mockGeneratePdf(title));
+    setStatusMessage(
+      `${mockGeneratePdf(title)} Patient: ${patientNameField || selectedPatient.name}. Date: ${dateField || "Not set"}.`,
+    );
   }
 
   function handleSignDigitally() {
@@ -266,7 +283,7 @@ export function LegalDocumentsWorkspace() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Select value={activePatientId} onValueChange={handlePatientChange}>
+            <Select value={currentPatientId} onValueChange={handlePatientChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Select patient" />
               </SelectTrigger>
@@ -288,11 +305,25 @@ export function LegalDocumentsWorkspace() {
                 Current context: {selectedPatient.reason}
               </p>
             </div>
-            <Button variant="outline" className="w-full" asChild>
-              <Link href={`/dashboard/patients?patient=${selectedPatient.id}`}>
-                View patient profile
-              </Link>
-            </Button>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button variant="outline" className="w-full" asChild>
+                <Link href={`/dashboard/patients?patient=${selectedPatient.id}`}>
+                  View patient profile
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setPatientNameField(selectedPatient.name);
+                  setStatusMessage(
+                    `${selectedPatient.name} pre-filled into the document editor.`,
+                  );
+                }}
+              >
+                Pre-fill patient
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </section>
@@ -368,7 +399,9 @@ export function LegalDocumentsWorkspace() {
                     onClick={() => {
                       setSelectedTemplateId(template.id);
                       setCustomClausesField("");
-                      setStatusMessage(`${template.title} selected.`);
+                      setStatusMessage(
+                        `${template.title} selected for ${selectedPatient.name}.`,
+                      );
                     }}
                     className={cn(
                       "rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary hover:bg-secondary/50",
@@ -552,7 +585,34 @@ export function LegalDocumentsWorkspace() {
                   <TableCell className="font-medium">
                     {document.documentType}
                   </TableCell>
-                  <TableCell>{document.patient}</TableCell>
+                  <TableCell>
+                    {(() => {
+                      const historyPatient = patients.find(
+                        (patient) => patient.name === document.patient,
+                      );
+
+                      return historyPatient ? (
+                        <Button
+                          variant="link"
+                          className="h-auto p-0"
+                          asChild
+                          onClick={() => selectHistoryPatient(document.patient)}
+                        >
+                          <Link href={`/dashboard/patients?patient=${historyPatient.id}`}>
+                            {document.patient}
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="link"
+                          className="h-auto p-0"
+                          onClick={() => selectHistoryPatient(document.patient)}
+                        >
+                          {document.patient}
+                        </Button>
+                      );
+                    })()}
+                  </TableCell>
                   <TableCell>{document.dateCreated}</TableCell>
                   <TableCell>
                     <Badge
@@ -564,7 +624,16 @@ export function LegalDocumentsWorkspace() {
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          selectHistoryPatient(document.patient);
+                          setStatusMessage(
+                            `${document.documentType} selected from history.`,
+                          );
+                        }}
+                      >
                         <Eye />
                         View
                       </Button>

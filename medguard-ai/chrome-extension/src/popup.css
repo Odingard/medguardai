@@ -107,3 +107,28 @@ h1 {
   margin-top: 12px;
   line-height: 1.5;
 }
+
+
+.template-label {
+  display: block;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 12px;
+}
+
+.template-select {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 14px;
+  margin-top: 6px;
+  padding: 10px 12px;
+}
+
+.template-help {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 6px;
+}

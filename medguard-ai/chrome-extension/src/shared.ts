@@ -98,8 +98,71 @@ export function detectEhr(hostname: string) {
   );
 }
 
-export function formatSoapForEhr(payload: MedGuardPushPayload = demoPayload) {
+export type EhrNoteTemplate = "soap" | "compact" | "epic";
+
+export const EHR_NOTE_TEMPLATES: Array<{
+  id: EhrNoteTemplate;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "soap",
+    label: "Structured SOAP",
+    description: "Full sectioned SOAP note for general EHR paste.",
+  },
+  {
+    id: "compact",
+    label: "Compact Scribe Note",
+    description: "Shorter sign-off format for fast charting.",
+  },
+  {
+    id: "epic",
+    label: "Epic-style Progress Note",
+    description: "Problem-oriented format with assessment/plan emphasis.",
+  },
+];
+
+export function formatSoapForEhr(
+  payload: MedGuardPushPayload = demoPayload,
+  template: EhrNoteTemplate = "soap",
+) {
   const { patient, latestNote } = payload;
+
+  if (template === "compact") {
+    return [
+      `MedGuard AI Note - ${patient.name} (${patient.dob})`,
+      `Reason: ${patient.reason}`,
+      "",
+      `S: ${latestNote.subjective}`,
+      `O: ${latestNote.objective}`,
+      `A: ${latestNote.assessment}`,
+      `P: ${latestNote.plan}`,
+      "",
+      `Codes: ${latestNote.billingCodes.join(", ")} | ICD-10: ${latestNote.icdCodes.join(", ")}`,
+      "Review before signing.",
+    ].join("\n");
+  }
+
+  if (template === "epic") {
+    return [
+      "==== MEDGUARD AI PROGRESS NOTE ====",
+      `Patient: ${patient.name} | DOB: ${patient.dob}`,
+      `Visit context: ${patient.reason}`,
+      "",
+      "HPI / SUBJECTIVE",
+      latestNote.subjective,
+      "",
+      "EXAM / OBJECTIVE",
+      latestNote.objective,
+      "",
+      "ASSESSMENT & PLAN",
+      `${latestNote.assessment} ${latestNote.plan}`,
+      "",
+      `Suggested E/M/CPT: ${latestNote.billingCodes.join(", ")}`,
+      `Suggested ICD-10: ${latestNote.icdCodes.join(", ")}`,
+      "Review before signing.",
+    ].join("\n");
+  }
 
   return [
     "==== MEDGUARD AI EHR PUSH ====",

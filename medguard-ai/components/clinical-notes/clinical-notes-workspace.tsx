@@ -137,6 +137,11 @@ export function ClinicalNotesWorkspace() {
   const [magicEditPrompt, setMagicEditPrompt] = useState(
     "Make this note more concise and ready for EHR sign-off.",
   );
+  const [clinicalQuestion, setClinicalQuestion] = useState(
+    "What should I not miss before signing this note?",
+  );
+  const [sectionToRegenerate, setSectionToRegenerate] = useState("assessment");
+  const [savedStyle, setSavedStyle] = useState("");
   const [isSecondaryGenerating, setIsSecondaryGenerating] = useState(false);
   const [statusMessage, setStatusMessage] = useState(
     pendingClinicalNotePrefill
@@ -338,6 +343,51 @@ export function ClinicalNotesWorkspace() {
     } finally {
       setIsSecondaryGenerating(false);
     }
+  }
+
+  async function handleAskClinicalQuestion() {
+    setIsSecondaryGenerating(true);
+    setAiError("");
+    try {
+      const result = await magicEditClinicalNoteAction(
+        getClinicalActionInput(`Answer this clinical question for provider review: ${clinicalQuestion}`),
+      );
+      setSecondaryOutput(result.text);
+      setStatusMessage(`Clinical question answered with ${result.provider} / ${result.model}.`);
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : "Unable to answer clinical question.");
+    } finally {
+      setIsSecondaryGenerating(false);
+    }
+  }
+
+  async function handleRegenerateSection() {
+    setIsSecondaryGenerating(true);
+    setAiError("");
+    try {
+      const result = await magicEditClinicalNoteAction(
+        getClinicalActionInput(
+          `Regenerate only the ${sectionToRegenerate} section. Preserve known facts and make it concise.`,
+        ),
+      );
+      setSecondaryOutput(result.text);
+      setStatusMessage(`${sectionToRegenerate} section regenerated with ${result.provider} / ${result.model}.`);
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : "Unable to regenerate section.");
+    } finally {
+      setIsSecondaryGenerating(false);
+    }
+  }
+
+  function handleSaveAsMyStyle() {
+    const style = [
+      `Template: ${selectedTemplate.title}`,
+      `Specialty: ${selectedSpecialty}`,
+      `Preference: ${magicEditPrompt}`,
+    ].join(" | ");
+    window.localStorage.setItem("medguard-clinical-note-style", style);
+    setSavedStyle(style);
+    setStatusMessage("Saved as My Style for this browser session.");
   }
 
   async function handleCopyToEhr() {
@@ -693,47 +743,88 @@ export function ClinicalNotesWorkspace() {
                   {aiError}
                 </p>
               ) : null}
-              <div className="grid gap-3 rounded-xl border bg-card/80 p-4 lg:grid-cols-3">
-                <Button
-                  variant="outline"
-                  onClick={handleGeneratePatientInstructions}
-                  disabled={isSecondaryGenerating}
-                >
-                  <Sparkles />
-                  Generate Patient Instructions
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleGenerateReferralLetter}
-                  disabled={isSecondaryGenerating}
-                >
-                  <FileText />
-                  Generate Referral Letter
-                </Button>
-                <div className="space-y-2">
-                  <Textarea
-                    value={magicEditPrompt}
-                    onChange={(event) => setMagicEditPrompt(event.target.value)}
-                    className="min-h-20"
-                  />
-                  <Button
-                    className="w-full"
-                    onClick={handleMagicEdit}
-                    disabled={isSecondaryGenerating}
-                  >
-                    {isSecondaryGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                    Magic Edit
-                  </Button>
-                </div>
-              </div>
-              {secondaryOutput ? (
-                <Textarea
-                  value={secondaryOutput}
-                  onChange={(event) => setSecondaryOutput(event.target.value)}
-                  className="min-h-44"
-                />
-              ) : null}
+              <p className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+                Use the AI Assistant panel on the right for patient instructions,
+                referral letters, Magic Edit, clinical questions, and section regeneration.
+              </p>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-primary/20">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Sparkles className="size-5 text-primary" />
+              <CardTitle>AI Assistant</CardTitle>
+            </div>
+            <CardDescription>
+              Refine notes faster than a standalone scribe: instructions,
+              referral letters, Magic Edit, clinical questions, and section regeneration.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-2">
+              <Button onClick={handleGeneratePatientInstructions} disabled={isSecondaryGenerating}>
+                <Sparkles />
+                Generate Patient Instructions
+              </Button>
+              <Button variant="outline" onClick={handleGenerateReferralLetter} disabled={isSecondaryGenerating}>
+                <FileText />
+                Generate Referral Letter
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <Label>Magic Edit</Label>
+              <Textarea
+                value={magicEditPrompt}
+                onChange={(event) => setMagicEditPrompt(event.target.value)}
+                className="min-h-20"
+              />
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={handleMagicEdit} disabled={isSecondaryGenerating}>
+                  {isSecondaryGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                  Magic Edit
+                </Button>
+                <Button variant="outline" onClick={handleSaveAsMyStyle}>
+                  Save as My Style
+                </Button>
+              </div>
+              {savedStyle ? <p className="text-xs text-muted-foreground">Saved: {savedStyle}</p> : null}
+            </div>
+            <div className="space-y-2">
+              <Label>Ask Clinical Question</Label>
+              <Textarea
+                value={clinicalQuestion}
+                onChange={(event) => setClinicalQuestion(event.target.value)}
+                className="min-h-20"
+              />
+              <Button variant="outline" className="w-full" onClick={handleAskClinicalQuestion} disabled={isSecondaryGenerating}>
+                Ask Assistant
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <Label>Regenerate Section</Label>
+              <select
+                value={sectionToRegenerate}
+                onChange={(event) => setSectionToRegenerate(event.target.value)}
+                className={selectClassName}
+              >
+                <option value="subjective">Subjective</option>
+                <option value="objective">Objective</option>
+                <option value="assessment">Assessment</option>
+                <option value="plan">Plan</option>
+              </select>
+              <Button variant="outline" className="w-full" onClick={handleRegenerateSection} disabled={isSecondaryGenerating}>
+                Regenerate {sectionToRegenerate}
+              </Button>
+            </div>
+            {secondaryOutput ? (
+              <Textarea
+                value={secondaryOutput}
+                onChange={(event) => setSecondaryOutput(event.target.value)}
+                className="min-h-44"
+              />
+            ) : null}
           </CardContent>
         </Card>
 

@@ -4,8 +4,10 @@ import { createRoot } from "react-dom/client";
 import {
   demoPayload,
   detectEhr,
+  EHR_NOTE_TEMPLATES,
   formatSoapForEhr,
   getExtensionSettings,
+  type EhrNoteTemplate,
   type MedGuardPushPayload,
 } from "./shared";
 import "./popup.css";
@@ -20,6 +22,7 @@ function Popup() {
   const [ehrName, setEhrName] = useState("Checking EHR...");
   const [payload, setPayload] = useState<MedGuardPushPayload>(demoPayload);
   const [source, setSource] = useState<"api" | "demo">("demo");
+  const [selectedTemplate, setSelectedTemplate] = useState<EhrNoteTemplate>("soap");
   const [appUrl, setAppUrl] = useState("http://localhost:3000");
   const [message, setMessage] = useState(
     "MVP mode copies or inserts formatted SOAP text. Review before signing.",
@@ -45,7 +48,7 @@ function Popup() {
   }, []);
 
   async function copyNote() {
-    await navigator.clipboard.writeText(formatSoapForEhr(payload));
+    await navigator.clipboard.writeText(formatSoapForEhr(payload, selectedTemplate));
     setMessage("Formatted SOAP note copied to clipboard.");
   }
 
@@ -83,6 +86,25 @@ function Popup() {
         <p>{payload.latestNote.title}</p>
         <p className="source">Source: {source === "api" ? "MedGuard API" : "Demo fallback"}</p>
       </section>
+
+      <label className="template-label" htmlFor="note-template">
+        Copy as Formatted Note
+      </label>
+      <select
+        id="note-template"
+        className="template-select"
+        value={selectedTemplate}
+        onChange={(event) => setSelectedTemplate(event.target.value as EhrNoteTemplate)}
+      >
+        {EHR_NOTE_TEMPLATES.map((template) => (
+          <option key={template.id} value={template.id}>
+            {template.label}
+          </option>
+        ))}
+      </select>
+      <p className="template-help">
+        {EHR_NOTE_TEMPLATES.find((template) => template.id === selectedTemplate)?.description}
+      </p>
 
       <button className="primary-button" type="button" onClick={pushToEhr}>
         Push Latest Note

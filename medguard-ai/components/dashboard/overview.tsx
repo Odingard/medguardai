@@ -30,7 +30,7 @@ import { useSubscriptionStore } from "@/lib/stores/subscriptionStore";
 import { cn } from "@/lib/utils";
 
 export function DashboardOverview() {
-  const { patients, currentPatientId } = usePatientStore();
+  const { patients, currentPatientId, prepareClinicalNoteHandoff } = usePatientStore();
   const restartOnboarding = useOnboardingStore((state) => state.restartOnboarding);
   const hasAdvancedAnalytics = useSubscriptionStore((state) =>
     state.hasFeature("advancedAnalytics"),
@@ -38,6 +38,23 @@ export function DashboardOverview() {
   const currentPatient =
     patients.find((patient) => patient.id === currentPatientId) ?? patients[0];
   const visitPrep = getPatientCommandMetrics(currentPatient).visitPrep;
+
+  function startVisitFromPrep() {
+    prepareClinicalNoteHandoff({
+      patientId: currentPatient.id,
+      source: "patient-directory",
+      prefill: [
+        `Visit Prep for ${currentPatient.name}`,
+        visitPrep.summary,
+        "",
+        `Medications: ${visitPrep.medications.join(", ")}`,
+        `Allergies: ${visitPrep.allergies.join(", ")}`,
+        `Pending items: ${visitPrep.pendingItems.join("; ")}`,
+        `Suggested talking points: ${visitPrep.talkingPoints.join("; ")}`,
+        `Cyber/compliance flags: ${visitPrep.cyberComplianceFlags.join("; ")}`,
+      ].join("\n"),
+    });
+  }
 
   return (
     <div className="space-y-8">
@@ -68,16 +85,16 @@ export function DashboardOverview() {
               <p className="mt-1 text-muted-foreground">{visitPrep.summary}</p>
               <div className="mt-3 grid gap-2 md:grid-cols-3">
                 <div>
-                  <p className="font-medium">Medications</p>
-                  <p className="text-muted-foreground">{visitPrep.medications.join(", ")}</p>
+                  <p className="font-medium">Medications / Allergies</p>
+                  <p className="text-muted-foreground">{visitPrep.medications.join(", ")} · Allergies: {visitPrep.allergies.join(", ")}</p>
                 </div>
                 <div>
-                  <p className="font-medium">Pending</p>
-                  <p className="text-muted-foreground">{visitPrep.pendingItems[0]}</p>
+                  <p className="font-medium">Talking points</p>
+                  <p className="text-muted-foreground">{visitPrep.talkingPoints[0]}</p>
                 </div>
                 <div>
-                  <p className="font-medium">Follow-up</p>
-                  <p className="text-muted-foreground">{visitPrep.followUps[0]}</p>
+                  <p className="font-medium">Cyber / Compliance</p>
+                  <p className="text-muted-foreground">{visitPrep.cyberComplianceFlags[0]}</p>
                 </div>
               </div>
             </div>
@@ -86,6 +103,12 @@ export function DashboardOverview() {
                 <Link href="/dashboard/patients">
                   Open patient directory
                   <UsersRound />
+                </Link>
+              </Button>
+              <Button asChild onClick={startVisitFromPrep}>
+                <Link href="/dashboard/clinical-notes">
+                  Start Visit
+                  <ArrowUpRight />
                 </Link>
               </Button>
               <Button variant="outline" asChild>

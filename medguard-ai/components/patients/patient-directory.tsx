@@ -184,21 +184,31 @@ export function PatientDirectory() {
     );
   }
 
+  function prepareVisitPrepHandoff(patient: MockPatient) {
+    const metrics = getPatientCommandMetrics(patient);
+    const prep = metrics.visitPrep;
+
+    prepareClinicalNoteHandoff({
+      patientId: patient.id,
+      source: "patient-directory",
+      prefill: [
+        `Visit Prep for ${patient.name}`,
+        prep.summary,
+        "",
+        `Medications: ${prep.medications.join(", ")}`,
+        `Allergies: ${prep.allergies.join(", ")}`,
+        `Pending items: ${prep.pendingItems.join("; ")}`,
+        `Suggested talking points: ${prep.talkingPoints.join("; ")}`,
+        `Cyber/compliance flags: ${prep.cyberComplianceFlags.join("; ")}`,
+      ].join("\n"),
+    });
+  }
+
   function preparePatientAction(patient: MockPatient, action: string) {
     setCurrentPatient(patient.id);
 
     if (action === "clinical") {
-      prepareClinicalNoteHandoff({
-        patientId: patient.id,
-        source: "patient-directory",
-        prefill: [
-          `Patient directory handoff for ${patient.name}`,
-          `Reason: ${patient.reason}`,
-          `Last visit: ${patient.lastVisit}`,
-          "",
-          "Generate or continue a SOAP note using this patient context.",
-        ].join("\n"),
-      });
+      prepareVisitPrepHandoff(patient);
     }
   }
 
@@ -336,13 +346,31 @@ export function PatientDirectory() {
                 <p><span className="font-medium">Last visit:</span> {profilePatient.lastVisit}</p>
                 <p><span className="font-medium">Current reason:</span> {profilePatient.reason}</p>
                 <div className="rounded-xl border bg-muted/40 p-3">
-                  <p className="font-semibold">Visit Prep</p>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-semibold">Visit Prep</p>
+                    <Button size="sm" asChild onClick={() => prepareVisitPrepHandoff(profilePatient)}>
+                      <Link href="/dashboard/clinical-notes">Start Visit</Link>
+                    </Button>
+                  </div>
                   <p className="mt-1 text-muted-foreground">{metrics.visitPrep.summary}</p>
-                  <ul className="mt-2 list-inside list-disc text-muted-foreground">
-                    {metrics.visitPrep.pendingItems.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
+                  <div className="mt-2 grid gap-2 md:grid-cols-2">
+                    <div>
+                      <p className="font-medium">Medications / Allergies</p>
+                      <p className="text-muted-foreground">{metrics.visitPrep.medications.join(", ")} · {metrics.visitPrep.allergies.join(", ")}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Talking points</p>
+                      <p className="text-muted-foreground">{metrics.visitPrep.talkingPoints.join("; ")}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Pending</p>
+                      <p className="text-muted-foreground">{metrics.visitPrep.pendingItems.join("; ")}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Cyber/compliance</p>
+                      <p className="text-muted-foreground">{metrics.visitPrep.cyberComplianceFlags.join("; ")}</p>
+                    </div>
+                  </div>
                 </div>
                 {renderQuickActions(profilePatient)}
               </CardContent>

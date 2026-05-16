@@ -5,8 +5,11 @@ export type PatientRiskLevel = "Low" | "Medium" | "High";
 export type VisitPrepSummary = {
   summary: string;
   medications: string[];
+  allergies: string[];
   pendingItems: string[];
   followUps: string[];
+  talkingPoints: string[];
+  cyberComplianceFlags: string[];
 };
 
 export type PatientCommandMetrics = {
@@ -84,8 +87,11 @@ visitPrep: {
       summary:
         "Hypertension follow-up patient with recent controlled home BP readings and lifestyle improvements. Watch medication adherence and lab follow-through.",
       medications: ["Lisinopril 10 mg daily", "Metformin 500 mg twice daily"],
+      allergies: ["NKDA"],
       pendingItems: ["Repeat BMP", "Confirm home BP log", "Review front-desk mailbox exposure task"],
       followUps: ["Primary care follow-up in 3 months", "Lifestyle counseling: sodium and walking"],
+      talkingPoints: ["Review home BP trend", "Confirm sodium reduction", "Ask about dizziness or cough"],
+      cyberComplianceFlags: ["Front desk mailbox exposure task may affect patient communications"],
     },
     timeline: [
       {
@@ -138,8 +144,11 @@ visitPrep: {
       summary:
         "Diabetes medication review patient with stable adherence but pending A1C follow-up. No active intake blockers.",
       medications: ["Metformin 500 mg twice daily", "Atorvastatin 20 mg nightly"],
+      allergies: ["NKDA"],
       pendingItems: ["A1C lab result", "Foot exam documentation", "Eye exam status"],
       followUps: ["Endocrine-style medication review", "Nutrition coaching if A1C elevated"],
+      talkingPoints: ["Review glucose log", "Ask about hypoglycemia", "Confirm medication access"],
+      cyberComplianceFlags: ["No current patient-specific cyber blocker"],
     },
     timeline: [
       {
@@ -185,8 +194,11 @@ visitPrep: {
       summary:
         "Telehealth URI follow-up patient with improving symptoms and consent workflow in progress. Cyber profile flags higher patient-context risk due to portal activity.",
       medications: ["Supportive OTC care", "No antibiotic documented"],
+      allergies: ["Not documented"],
       pendingItems: ["Confirm telehealth consent", "Review portal message", "Return precautions acknowledged"],
       followUps: ["Telehealth check-in if symptoms worsen", "Complete consent signature"],
+      talkingPoints: ["Confirm symptom improvement", "Review return precautions", "Verify telehealth location/consent"],
+      cyberComplianceFlags: ["Portal activity elevated; verify identity before sensitive messages"],
     },
     timeline: [
       {
@@ -221,8 +233,11 @@ export function getPatientCommandMetrics(patient: MockPatient) {
       visitPrep: {
         summary: `${patient.name} was recently added. Review imported context, medications, and pending tasks before the visit.`,
         medications: ["Not documented"],
+        allergies: ["Not documented"],
         pendingItems: ["Confirm demographics", "Review source records"],
         followUps: ["Create first clinical note"],
+        talkingPoints: ["Confirm chief concern", "Review imported context"],
+        cyberComplianceFlags: ["No patient-specific flag yet"],
       },
       timeline: [
         {

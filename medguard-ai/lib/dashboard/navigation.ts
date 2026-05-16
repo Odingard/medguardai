@@ -1,9 +1,11 @@
 import {
   ClipboardCheck,
+  Clock,
+  Copy,
+  CreditCard,
   DatabaseZap,
   FileHeart,
   FileText,
-  CreditCard,
   LayoutDashboard,
   ShieldCheck,
   UsersRound,
@@ -23,39 +25,48 @@ export const dashboardNavigation = [
     featured: false,
   },
   {
-    title: "Clinical Notes",
-    href: "/dashboard/clinical-notes",
-    icon: FileHeart,
-    featured: false,
-  },
-  {
-    title: "Smart Intake",
-    href: "/dashboard/smart-intake",
-    icon: ClipboardCheck,
-    featured: false,
-  },
-  {
-    title: "Legal Documents",
-    href: "/dashboard/legal-documents",
-    icon: FileText,
-    featured: false,
-  },
-  {
     title: "Cyber Hygiene",
     href: "/dashboard/cyber-hygiene",
     icon: ShieldCheck,
     featured: true,
   },
   {
-    title: "Data Migration",
-    href: "/dashboard/data-migration",
-    icon: DatabaseZap,
-    featured: false,
-  },
-  {
     title: "Billing",
     href: "/dashboard/billing",
     icon: CreditCard,
     featured: false,
+  },
+] as const;
+
+export const patientWorkspaceTabs = [
+  {
+    title: "Visit Prep",
+    key: "visit-prep",
+    icon: Clock,
+  },
+  {
+    title: "Clinical Notes",
+    key: "clinical-notes",
+    icon: FileHeart,
+  },
+  {
+    title: "Smart Intake",
+    key: "smart-intake",
+    icon: ClipboardCheck,
+  },
+  {
+    title: "Legal Documents",
+    key: "legal-docs",
+    icon: FileText,
+  },
+  {
+    title: "Data Migration",
+    key: "data-migration",
+    icon: DatabaseZap,
+  },
+  {
+    title: "EHR Push",
+    key: "ehr-push",
+    icon: Copy,
   },
 ] as const;

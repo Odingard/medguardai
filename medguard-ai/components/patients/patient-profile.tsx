@@ -123,27 +123,27 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
             Set as Current Patient
           </Button>
           <Button asChild onClick={prepareVisitPrepHandoff}>
-            <Link href="/dashboard/clinical-notes">
+            <Link href="#patient-clinical-notes">
               <FileHeart />
               Start Visit
             </Link>
           </Button>
           <Button variant="outline" asChild onClick={() => setCurrentPatient(patient.id)}>
-            <Link href="/dashboard/smart-intake">
+            <Link href="#patient-smart-intake">
               <ClipboardCheck />
-              New Smart Intake
+              Smart Intake
             </Link>
           </Button>
           <Button variant="outline" asChild onClick={() => setCurrentPatient(patient.id)}>
-            <Link href="/dashboard/legal-documents">
+            <Link href="#patient-legal-documents">
               <FileText />
-              Generate Legal Document
+              Legal Documents
             </Link>
           </Button>
           <Button variant="outline" asChild onClick={() => setCurrentPatient(patient.id)}>
-            <Link href="/dashboard/data-migration">
+            <Link href="#patient-data-migration">
               <DatabaseZap />
-              Migrate More Data
+              Data Migration
             </Link>
           </Button>
           <Button variant="outline" onClick={pushLatestNoteToEhr}>
@@ -154,7 +154,7 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
       </Card>
 
       <section className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
-        <Card>
+        <Card id="patient-visit-prep">
           <CardHeader>
             <CardTitle>Visit Prep</CardTitle>
             <CardDescription>
@@ -201,16 +201,18 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
         </Card>
 
         <div className="space-y-4">
-          <Card>
+          <Card id="patient-clinical-notes">
             <CardHeader>
               <CardTitle>Clinical Notes</CardTitle>
-              <CardDescription>Recent notes and note actions for this patient.</CardDescription>
+              <CardDescription>
+                Recent notes and note actions for this patient. Use this section without leaving the patient workspace.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {metrics.recentNotes.map((note) => (
                 <Link
                   key={note.id}
-                  href="/dashboard/clinical-notes"
+                  href="#patient-clinical-notes"
                   onClick={prepareVisitPrepHandoff}
                   className="block rounded-xl border bg-card p-3 transition-colors hover:bg-muted/50"
                 >
@@ -220,12 +222,12 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
                 </Link>
               ))}
               <Button asChild onClick={prepareVisitPrepHandoff}>
-                <Link href="/dashboard/clinical-notes">Open Clinical Notes</Link>
+                <Link href="#patient-clinical-notes">Open Clinical Notes</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card id="patient-smart-intake">
             <CardHeader>
               <CardTitle>Smart Intake</CardTitle>
               <CardDescription>Recent intake packets and next intake action.</CardDescription>
@@ -234,7 +236,7 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
               {metrics.recentIntakes.map((intake) => (
                 <Link
                   key={intake.id}
-                  href="/dashboard/smart-intake"
+                  href="#patient-smart-intake"
                   onClick={() => setCurrentPatient(patient.id)}
                   className="block rounded-xl border bg-card p-3 transition-colors hover:bg-muted/50"
                 >
@@ -243,12 +245,12 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
                 </Link>
               ))}
               <Button variant="outline" asChild onClick={() => setCurrentPatient(patient.id)}>
-                <Link href="/dashboard/smart-intake">New Smart Intake</Link>
+                <Link href="#patient-smart-intake">New Smart Intake</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card id="patient-legal-documents">
             <CardHeader>
               <CardTitle>Legal Documents</CardTitle>
               <CardDescription>Active patient documents and generation actions.</CardDescription>
@@ -257,7 +259,7 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
               {metrics.legalDocuments.map((document) => (
                 <Link
                   key={document.id}
-                  href="/dashboard/legal-documents"
+                  href="#patient-legal-documents"
                   onClick={() => setCurrentPatient(patient.id)}
                   className="block rounded-xl border bg-card p-3 transition-colors hover:bg-muted/50"
                 >
@@ -266,12 +268,12 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
                 </Link>
               ))}
               <Button variant="outline" asChild onClick={() => setCurrentPatient(patient.id)}>
-                <Link href="/dashboard/legal-documents">Generate Legal Document</Link>
+                <Link href="#patient-legal-documents">Generate Legal Document</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card id="patient-data-migration">
             <CardHeader>
               <CardTitle>Data Migration</CardTitle>
               <CardDescription>Legacy records and import continuation for this patient.</CardDescription>
@@ -279,12 +281,12 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
             <CardContent className="space-y-3 text-sm text-muted-foreground">
               <p>Continue importing legacy documents, PDFs, scans, or EHR exports for {patient.name}.</p>
               <Button variant="outline" asChild onClick={() => setCurrentPatient(patient.id)}>
-                <Link href="/dashboard/data-migration">Migrate More Data</Link>
+                <Link href="#patient-data-migration">Migrate More Data</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card id="patient-ehr-push">
             <CardHeader>
               <CardTitle>EHR Push</CardTitle>
               <CardDescription>Copy the latest note payload for Chrome Extension push.</CardDescription>
@@ -298,7 +300,7 @@ export function PatientProfile({ patientId }: PatientProfileProps) {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card id="patient-timeline">
             <CardHeader>
               <CardTitle>Timeline</CardTitle>
               <CardDescription>Activity across this patient workspace.</CardDescription>

@@ -100,8 +100,8 @@ function shouldShowField(field: IntakeField, values: IntakeFormValues) {
 export function SmartIntakeWorkspace() {
   const {
     patients,
-    activePatientId,
-    setActivePatient,
+    currentPatientId,
+    setCurrentPatient,
     prepareClinicalNoteHandoff: prepareStoreClinicalNoteHandoff,
   } = usePatientStore();
   const router = useRouter();
@@ -118,6 +118,9 @@ export function SmartIntakeWorkspace() {
   const [isAutofilling, setIsAutofilling] = useState(false);
   const [submissionSummary, setSubmissionSummary] = useState("");
   const [portalMessage, setPortalMessage] = useState("");
+  const [builderMessage, setBuilderMessage] = useState(
+    "Describe a form in plain language, then let the Smart Builder create fields.",
+  );
 
   const selectedTemplate = useMemo(
     () =>
@@ -128,8 +131,8 @@ export function SmartIntakeWorkspace() {
 
   const selectedPatient = useMemo(
     () =>
-      patients.find((patient) => patient.id === activePatientId) ?? patients[0],
-    [patients, activePatientId],
+      patients.find((patient) => patient.id === currentPatientId) ?? patients[0],
+    [patients, currentPatientId],
   );
 
   const filteredTemplates = useMemo(() => {
@@ -174,6 +177,9 @@ export function SmartIntakeWorkspace() {
       ...current.filter((template) => template.id !== generatedTemplate.id),
     ]);
     handleSelectTemplate(generatedTemplate);
+    setBuilderMessage(
+      `${generatedTemplate.title} generated with ${generatedTemplate.fields.length} dynamic fields.`,
+    );
     setBuilderOpen(false);
     setIsBuilding(false);
   }
@@ -184,16 +190,27 @@ export function SmartIntakeWorkspace() {
 
     const historyValues = autoFillFromHistory(selectedPatient.name);
     Object.entries(historyValues).forEach(([key, value]) => {
-      form.setValue(key, value);
+      form.setValue(key, value, { shouldDirty: true, shouldValidate: true });
     });
+    setPortalMessage(
+      `Auto-filled ${selectedPatient.name}'s intake from mock history.`,
+    );
     setIsAutofilling(false);
   }
 
   function handleSubmit(valuesToSubmit: IntakeFormValues) {
     setSubmissionSummary(summarizeIntake(valuesToSubmit));
-    setPortalMessage("");
     prepareClinicalNoteHandoffForValues(valuesToSubmit);
-    router.push("/dashboard/clinical-notes");
+    setPortalMessage(
+      `Clinical Notes handoff prepared for ${selectedPatient.name}.`,
+    );
+  }
+
+  function submitAndOpenClinicalNotes() {
+    form.handleSubmit((valuesToSubmit) => {
+      handleSubmit(valuesToSubmit);
+      router.push("/dashboard/clinical-notes");
+    })();
   }
 
   function prepareClinicalNoteHandoffForValues(valuesToUse: IntakeFormValues) {
@@ -204,6 +221,7 @@ export function SmartIntakeWorkspace() {
       )
       .join("\n");
 
+    setCurrentPatient(selectedPatient.id);
     prepareStoreClinicalNoteHandoff({
       patientId: selectedPatient.id,
       source: "smart-intake",
@@ -339,7 +357,7 @@ export function SmartIntakeWorkspace() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Select value={activePatientId} onValueChange={setActivePatient}>
+            <Select value={currentPatientId} onValueChange={setCurrentPatient}>
               <SelectTrigger>
                 <SelectValue placeholder="Select patient" />
               </SelectTrigger>
@@ -400,6 +418,10 @@ export function SmartIntakeWorkspace() {
                 className="pl-9"
               />
             </div>
+
+            <p className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+              {builderMessage}
+            </p>
 
             <Dialog open={builderOpen} onOpenChange={setBuilderOpen}>
               <DialogTrigger asChild>
@@ -522,6 +544,10 @@ export function SmartIntakeWorkspace() {
                     <ClipboardCheck />
                     Submit Intake
                   </Button>
+                  <Button type="button" onClick={submitAndOpenClinicalNotes}>
+                    <FileText />
+                    Submit + Open Clinical Notes
+                  </Button>
                   <Button
                     type="button"
                     variant="outline"
@@ -601,7 +627,7 @@ export function SmartIntakeWorkspace() {
             <div className="grid gap-3 sm:grid-cols-3">
               <Button
                 asChild
-                variant="outline"
+                variant={submissionSummary ? "default" : "outline"}
                 disabled={!submissionSummary}
                 onClick={prepareClinicalNoteHandoff}
               >

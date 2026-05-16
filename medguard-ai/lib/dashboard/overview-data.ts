@@ -21,6 +21,7 @@ export const connectedOverviewStats = [
     helper: "Includes generated SOAP drafts",
     href: "/dashboard/clinical-notes",
     icon: FileHeart,
+    featured: false,
   },
   {
     label: "Intakes completed",
@@ -28,6 +29,7 @@ export const connectedOverviewStats = [
     helper: "Ready for note handoff",
     href: "/dashboard/smart-intake",
     icon: ClipboardCheck,
+    featured: false,
   },
   {
     label: "Cyber risk score",
@@ -43,6 +45,7 @@ export const connectedOverviewStats = [
     helper: "Consent and compliance templates",
     href: "/dashboard/legal-documents",
     icon: FileText,
+    featured: false,
   },
   {
     label: "Migrations completed",
@@ -53,6 +56,7 @@ export const connectedOverviewStats = [
     helper: "Legacy imports tracked",
     href: "/dashboard/data-migration",
     icon: DatabaseZap,
+    featured: false,
   },
 ] as const;
 
@@ -62,12 +66,14 @@ export const dashboardQuickActions = [
     description: "Start ambient dictation or paste encounter details.",
     href: "/dashboard/clinical-notes",
     icon: FileHeart,
+    featured: false,
   },
   {
     title: "New Intake",
     description: "Build an intelligent intake packet.",
     href: "/dashboard/smart-intake",
     icon: ClipboardCheck,
+    featured: false,
   },
   {
     title: "Run Cyber Scan",
@@ -81,6 +87,7 @@ export const dashboardQuickActions = [
     description: "Generate consent or compliance paperwork.",
     href: "/dashboard/legal-documents",
     icon: FileText,
+    featured: false,
   },
 ] as const;
 
@@ -91,6 +98,7 @@ export const connectedRecentActivity = [
     time: "6 min ago",
     href: "/dashboard/clinical-notes",
     icon: Sparkles,
+    featured: false,
   },
   {
     title: "Cyber Hygiene scan completed",
@@ -106,6 +114,7 @@ export const connectedRecentActivity = [
     time: "32 min ago",
     href: "/dashboard/legal-documents",
     icon: FileText,
+    featured: false,
   },
   {
     title: "Legacy EHR export import completed",
@@ -113,5 +122,6 @@ export const connectedRecentActivity = [
     time: "1 hr ago",
     href: "/dashboard/data-migration",
     icon: UploadCloud,
+    featured: false,
   },
 ] as const;

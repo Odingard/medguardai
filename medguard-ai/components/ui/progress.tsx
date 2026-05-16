@@ -4,9 +4,15 @@ import { cn } from "@/lib/utils";
 
 type ProgressProps = React.HTMLAttributes<HTMLDivElement> & {
   value: number;
+  indicatorClassName?: string;
 };
 
-function Progress({ className, value, ...props }: ProgressProps) {
+function Progress({
+  className,
+  value,
+  indicatorClassName,
+  ...props
+}: ProgressProps) {
   return (
     <div
       className={cn(
@@ -16,7 +22,10 @@ function Progress({ className, value, ...props }: ProgressProps) {
       {...props}
     >
       <div
-        className="h-full rounded-full bg-primary transition-all"
+        className={cn(
+          "h-full rounded-full bg-primary transition-all",
+          indicatorClassName,
+        )}
         style={{ width: `${Math.max(0, Math.min(value, 100))}%` }}
       />
     </div>

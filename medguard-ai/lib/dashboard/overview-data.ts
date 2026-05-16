@@ -1,4 +1,5 @@
 import {
+  Chrome,
   ClipboardCheck,
   DatabaseZap,
   FileHeart,
@@ -87,6 +88,13 @@ export const dashboardQuickActions = [
     description: "Generate consent or compliance paperwork.",
     href: "/dashboard/legal-documents",
     icon: FileText,
+    featured: false,
+  },
+  {
+    title: "Install Chrome Extension",
+    description: "Enable EHR Push from supported EHR tabs.",
+    href: "/dashboard/billing#chrome-extension",
+    icon: Chrome,
     featured: false,
   },
 ] as const;

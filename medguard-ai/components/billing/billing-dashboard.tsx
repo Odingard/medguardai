@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { AlertTriangle, CheckCircle2, CreditCard, ExternalLink } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Chrome, CreditCard, ExternalLink } from "lucide-react";
 
 import {
   createCheckoutSessionAction,
@@ -119,6 +120,39 @@ export function BillingDashboard() {
           card `4242 4242 4242 4242`.
         </AlertDescription>
       </Alert>
+
+      <section id="chrome-extension">
+        <Card className="border-blue-300 bg-blue-50/70 dark:border-blue-900 dark:bg-blue-950/20">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Chrome className="size-5 text-primary" />
+              <CardTitle>Install Chrome Extension</CardTitle>
+            </div>
+            <CardDescription>
+              Local MVP install: open Chrome Extensions, enable Developer mode,
+              choose Load unpacked, and select the `chrome-extension/` folder in
+              this project. The extension adds a MedGuard Push button on
+              supported EHR pages and simulates SOAP note insertion/copy.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3">
+            <Button
+              variant="outline"
+              onClick={() =>
+                setStatusMessage(
+                  "Chrome Extension install: open chrome://extensions, enable Developer mode, click Load unpacked, then select medguard-ai/chrome-extension.",
+                )
+              }
+            >
+              <Chrome />
+              Show install instructions
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/clinical-notes">Prepare latest SOAP note</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
 
       <section className="grid gap-4 xl:grid-cols-[1fr_0.8fr]">
         <Card className="border-primary/20 bg-[linear-gradient(135deg,_hsl(var(--card)),_hsl(var(--secondary)))]">

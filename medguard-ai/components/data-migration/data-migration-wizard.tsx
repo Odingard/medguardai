@@ -816,7 +816,7 @@ export function DataMigrationWizard() {
                       <div key={patient.id} className="flex flex-wrap gap-2 rounded-lg border p-2">
                         <span className="px-2 py-1 text-sm font-medium">{patient.name}</span>
                         <Button size="sm" variant="outline" asChild>
-                          <Link href={`/dashboard/patients?patient=${patient.id}`}>
+                          <Link href={`/dashboard/patients/${patient.id}`}>
                             View in Patients
                           </Link>
                         </Button>

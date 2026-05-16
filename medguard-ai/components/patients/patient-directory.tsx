@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ClipboardCheck,
@@ -99,6 +100,7 @@ const moduleActions = [
 ] as const;
 
 export function PatientDirectory() {
+  const router = useRouter();
   const {
     patients,
     currentPatientId,
@@ -173,7 +175,7 @@ export function PatientDirectory() {
 
   function openProfile(patient: MockPatient) {
     setAsCurrentPatient(patient);
-    setProfilePatient(patient);
+    router.push(`/dashboard/patients/${patient.id}`);
   }
 
   function togglePatientSelection(patientId: string, checked: boolean) {
@@ -250,13 +252,16 @@ export function PatientDirectory() {
         <Button
           variant="outline"
           size="sm"
+          asChild
           onClick={(event) => {
             event.stopPropagation();
-            openProfile(patient);
+            setAsCurrentPatient(patient);
           }}
         >
-          <UserRound />
-          View Profile
+          <Link href={`/dashboard/patients/${patient.id}`}>
+            <UserRound />
+            View Profile
+          </Link>
         </Button>
         {moduleActions.map((action) => {
           const Icon = action.icon;

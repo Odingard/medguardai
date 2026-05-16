@@ -152,7 +152,7 @@ async function generateWithOpenAI(
 async function generateWithAnthropic(
   input: ClinicalNoteGenerationInput,
 ): Promise<ClinicalNoteGenerationResult> {
-  const model = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-latest";
+  const model = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
   });
@@ -201,8 +201,8 @@ export async function generateClinicalSoapNote(
       ...fallback,
       warning:
         error instanceof Error
-          ? `AI provider failed: ${error.message}. Used mock fallback.`
-          : "AI provider failed. Used mock fallback.",
+          ? "Live AI provider unavailable. Used safe mock fallback."
+          : "Live AI provider unavailable. Used safe mock fallback.",
     };
   }
 }
@@ -275,7 +275,7 @@ async function generateClinicalText({
 
     if (process.env.ANTHROPIC_API_KEY) {
       const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-      const model = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-latest";
+      const model = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
       const message = await client.messages.create({
         model,
         max_tokens: 1200,
@@ -294,12 +294,10 @@ async function generateClinicalText({
         model,
       };
     }
-  } catch (error) {
+  } catch {
     return {
       text:
-        error instanceof Error
-          ? `AI provider failed: ${error.message}. Mock fallback used.\n\n${mockClinicalText(input, task)}`
-          : mockClinicalText(input, task),
+        `Live AI provider unavailable. Using safe mock fallback.\n\n${mockClinicalText(input, task)}`,
       provider: "mock" as const,
       model: "mock-clinical-text-v1",
     };

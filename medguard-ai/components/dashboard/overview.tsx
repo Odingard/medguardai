@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { ArrowUpRight, ShieldAlert, Sparkles, UsersRound } from "lucide-react";
 
+import { OnboardingTour } from "@/components/onboarding/onboarding-tour";
+import { RoiCalculator } from "@/components/roi/roi-calculator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,12 +23,14 @@ import {
   dashboardQuickActions,
 } from "@/lib/dashboard/overview-data";
 import { cyberRiskScore } from "@/lib/cyber-hygiene/data";
+import { useOnboardingStore } from "@/lib/stores/onboardingStore";
 import { usePatientStore } from "@/lib/stores/patientStore";
 import { useSubscriptionStore } from "@/lib/stores/subscriptionStore";
 import { cn } from "@/lib/utils";
 
 export function DashboardOverview() {
   const { patients, currentPatientId } = usePatientStore();
+  const restartOnboarding = useOnboardingStore((state) => state.restartOnboarding);
   const hasAdvancedAnalytics = useSubscriptionStore((state) =>
     state.hasFeature("advancedAnalytics"),
   );
@@ -35,6 +39,7 @@ export function DashboardOverview() {
 
   return (
     <div className="space-y-8">
+      <OnboardingTour />
       <section className="grid gap-4 xl:grid-cols-[1.8fr_1fr]">
         <Card className="overflow-hidden border-primary/10 bg-[linear-gradient(135deg,_hsl(var(--card)),_hsl(var(--secondary)))]">
           <CardHeader className="pb-4">
@@ -74,6 +79,9 @@ export function DashboardOverview() {
                   Start intake-to-note flow
                   <ArrowUpRight />
                 </Link>
+              </Button>
+              <Button variant="ghost" onClick={restartOnboarding}>
+                Restart tour
               </Button>
             </div>
           </CardContent>
@@ -183,6 +191,8 @@ export function DashboardOverview() {
           );
         })}
       </section>
+
+      <RoiCalculator />
 
       <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>

@@ -8,6 +8,7 @@ import {
   createCheckoutSessionAction,
   createCustomerPortalAction,
 } from "@/app/dashboard/billing/actions";
+import { RoiCalculator } from "@/components/roi/roi-calculator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -232,6 +233,8 @@ export function BillingDashboard() {
           </CardContent>
         </Card>
       </section>
+
+      <RoiCalculator variant="billing" />
 
       <section className="grid gap-4 xl:grid-cols-3">
         {subscriptionPlans.map((plan) => {

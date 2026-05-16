@@ -54,7 +54,6 @@ import {
   mockSaveNoteToPatientRecord,
   pastNotes,
   transcriptionSegments,
-  type ClinicalTemplate,
   type MockPatient,
   type NoteMode,
   type SoapNote,

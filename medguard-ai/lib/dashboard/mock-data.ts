@@ -12,12 +12,14 @@ export const overviewStats = [
     value: "18",
     helper: "+24% vs. yesterday",
     icon: FileHeart,
+    featured: false,
   },
   {
     label: "Intake forms completed",
     value: "42",
     helper: "8 awaiting review",
     icon: ClipboardCheck,
+    featured: false,
   },
   {
     label: "Cyber risk score",
@@ -31,6 +33,7 @@ export const overviewStats = [
     value: "31.5",
     helper: "Across documentation and intake",
     icon: Clock3,
+    featured: false,
   },
 ] as const;
 
@@ -40,6 +43,7 @@ export const recentActivity = [
     detail: "Dr. Maya Chen reviewed and signed the note.",
     time: "8 min ago",
     icon: FileHeart,
+    featured: false,
   },
   {
     title: "Cyber Hygiene scan completed",
@@ -53,12 +57,14 @@ export const recentActivity = [
     detail: "New patient form triaged and routed to front desk.",
     time: "41 min ago",
     icon: ClipboardCheck,
+    featured: false,
   },
   {
     title: "Weekly operations summary prepared",
     detail: "AI highlighted 6 avoidable admin bottlenecks.",
     time: "1 hr ago",
     icon: Activity,
+    featured: false,
   },
 ] as const;
 

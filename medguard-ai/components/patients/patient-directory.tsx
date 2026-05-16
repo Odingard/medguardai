@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -104,6 +104,8 @@ export function PatientDirectory() {
   const hasTeamSharing = useSubscriptionStore((state) =>
     state.hasFeature("teamSharing"),
   );
+  const [subscriptionMounted, setSubscriptionMounted] = useState(false);
+  const teamSharingReady = subscriptionMounted && hasTeamSharing;
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [filterMode, setFilterMode] = useState<FilterMode>("all");
@@ -112,6 +114,11 @@ export function PatientDirectory() {
   const [statusMessage, setStatusMessage] = useState(
     "Select a patient to make them the active context across MedGuard.",
   );
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setSubscriptionMounted(true), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   const recentPatients = useMemo(
     () =>
@@ -534,16 +541,16 @@ export function PatientDirectory() {
         </CardContent>
       </Card>
 
-      <Card className={hasTeamSharing ? "border-emerald-300 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/20" : "border-amber-300 bg-amber-50/70 dark:border-amber-900 dark:bg-amber-950/20"}>
+      <Card className={teamSharingReady ? "border-emerald-300 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/20" : "border-amber-300 bg-amber-50/70 dark:border-amber-900 dark:bg-amber-950/20"}>
         <CardHeader>
-          <CardTitle>Bulk Actions {hasTeamSharing ? "Unlocked" : "Locked"}</CardTitle>
+          <CardTitle>Bulk Actions {teamSharingReady ? "Unlocked" : "Locked"}</CardTitle>
           <CardDescription>
             Select multiple patients to run bulk intake packets, bulk legal documents,
             or team workflows. SMB / Group unlocks production bulk actions.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          {hasTeamSharing ? (
+          {teamSharingReady ? (
             <>
               <Button
                 disabled={!selectedPatientIds.length}

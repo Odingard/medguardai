@@ -50,6 +50,8 @@ import {
   type AlertSeverity,
   type RiskLevel,
 } from "@/lib/cyber-hygiene/data";
+import { getPatientCommandMetrics, getRiskBadgeClass } from "@/lib/patients/command-center";
+import { usePatientStore } from "@/lib/stores/patientStore";
 import { useSubscriptionStore } from "@/lib/stores/subscriptionStore";
 import { cn } from "@/lib/utils";
 
@@ -69,9 +71,15 @@ const metricStyles: Record<RiskLevel, string> = {
 };
 
 export function CyberHygieneDashboard() {
+  const { patients, currentPatientId } = usePatientStore();
   const hasAdvancedCyber = useSubscriptionStore((state) =>
     state.hasFeature("advancedCyber"),
   );
+  const currentPatient =
+    patients.find((patient) => patient.id === currentPatientId) ?? patients[0];
+  const patientMetrics = getPatientCommandMetrics(currentPatient);
+  const [riskScore, setRiskScore] = useState(cyberRiskScore.score);
+  const [riskTrend, setRiskTrend] = useState(cyberRiskScore.trend);
   const [lastScanned, setLastScanned] = useState(cyberRiskScore.lastScanned);
   const [scanMessage, setScanMessage] = useState(cyberRiskScore.summary);
   const [runningAgent, setRunningAgent] = useState<AgentId | null>(null);
@@ -89,21 +97,35 @@ export function CyberHygieneDashboard() {
       ),
   );
 
-  const riskTone = useMemo(
-    () => getRiskTone(cyberRiskScore.score),
-    [],
-  );
+  const riskTone = useMemo(() => getRiskTone(riskScore), [riskScore]);
 
   function handleScanNow() {
     const scanResult = simulateCyberScan();
+    const nextScore = Math.min(100, riskScore + 2);
+    setRiskScore(nextScore);
+    setRiskTrend(`+${nextScore - cyberRiskScore.score} points after latest scan`);
     setLastScanned(scanResult.completedAt);
-    setScanMessage(scanResult.summary);
+    setScanMessage(
+      `${scanResult.summary} Current patient context: ${currentPatient.name} has ${patientMetrics.cyberRisk.toLowerCase()} patient-level cyber risk (${patientMetrics.cyberScore}/100).`,
+    );
   }
 
   function handleRunAgent(agentId: AgentId, agentName: string) {
     setRunningAgent(agentId);
-    setAgentRunMessage(simulateAgentRun(agentName));
+    setAgentRunMessage(
+      `${simulateAgentRun(agentName)} Patient context: ${currentPatient.name}.`,
+    );
     window.setTimeout(() => setRunningAgent(null), 600);
+  }
+
+  function handleToggleAgent(agentId: AgentId, enabled: boolean, agentName: string) {
+    setAgentToggles((current) => ({
+      ...current,
+      [agentId]: enabled,
+    }));
+    setAgentRunMessage(
+      `${agentName} ${enabled ? "enabled" : "disabled"} for practice monitoring.`,
+    );
   }
 
   return (
@@ -125,12 +147,12 @@ export function CyberHygieneDashboard() {
                 <div
                   className="absolute inset-3 rounded-full"
                   style={{
-                    background: `conic-gradient(hsl(var(--primary)) ${cyberRiskScore.score * 3.6}deg, hsl(var(--secondary)) 0deg)`,
+                    background: `conic-gradient(hsl(var(--primary)) ${riskScore * 3.6}deg, hsl(var(--secondary)) 0deg)`,
                   }}
                 />
                 <div className="relative flex size-36 flex-col items-center justify-center rounded-full bg-card">
                   <span className="text-5xl font-semibold">
-                    {cyberRiskScore.score}
+                    {riskScore}
                   </span>
                   <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
                     score
@@ -154,11 +176,11 @@ export function CyberHygieneDashboard() {
                     <span className="font-medium">{lastScanned}</span>
                   </div>
                   <Progress
-                    value={cyberRiskScore.score}
+                    value={riskScore}
                     indicatorClassName={riskTone.progressClassName}
                   />
                   <p className="text-sm text-muted-foreground">
-                    {cyberRiskScore.trend}
+                    {riskTrend}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-3">
@@ -179,6 +201,32 @@ export function CyberHygieneDashboard() {
           <CardContent>
             <div className="rounded-xl border bg-card/80 p-4 text-sm text-muted-foreground">
               {scanMessage}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-primary/20">
+          <CardHeader>
+            <CardTitle>Patient cyber context</CardTitle>
+            <CardDescription>
+              Patient-specific risk is contextual and does not require PHI for MVP testing.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-xl border bg-card p-4">
+              <p className="font-semibold">Current Patient: {currentPatient.name}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {currentPatient.reason} · Last visit {currentPatient.lastVisit}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className={getRiskBadgeClass(patientMetrics.cyberRisk)}>
+                {patientMetrics.cyberRisk} risk · {patientMetrics.cyberScore}/100
+              </Badge>
+              <Badge variant="outline">
+                {patientMetrics.intakePending ? "Intake pending" : "Intake clear"}
+              </Badge>
+              <Badge variant="outline">{patientMetrics.notesCount} notes</Badge>
             </div>
           </CardContent>
         </Card>
@@ -304,27 +352,31 @@ export function CyberHygieneDashboard() {
                       checked={agentToggles[agent.id]}
                       disabled={locked}
                       onCheckedChange={(checked) =>
-                        setAgentToggles((current) => ({
-                          ...current,
-                          [agent.id]: checked,
-                        }))
+                        handleToggleAgent(agent.id, checked, agent.name)
                       }
                       aria-label={`Toggle ${agent.name}`}
                     />
                     <Button
-                      variant="outline"
+                      variant={locked ? "outline" : "default"}
                       size="sm"
-                      onClick={() => handleRunAgent(agent.id, agent.name)}
-                      disabled={locked}
+                      asChild={locked}
+                      onClick={locked ? undefined : () => handleRunAgent(agent.id, agent.name)}
                     >
                       {locked ? (
-                        <Lock />
-                      ) : isRunning ? (
-                        <RefreshCw className="animate-spin" />
+                        <Link href="/dashboard/billing">
+                          <Lock />
+                          Upgrade
+                        </Link>
                       ) : (
-                        <Play />
+                        <>
+                          {isRunning ? (
+                            <RefreshCw className="animate-spin" />
+                          ) : (
+                            <Play />
+                          )}
+                          Run Agent
+                        </>
                       )}
-                      {locked ? "Upgrade" : "Run Agent"}
                     </Button>
                   </div>
                 </div>

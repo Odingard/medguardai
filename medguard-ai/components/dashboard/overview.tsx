@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, FlaskConical, ShieldAlert, Stethoscope, UsersRound } from "lucide-react";
+import {
+  Activity,
+  ArrowUpRight,
+  FlaskConical,
+  ShieldCheck,
+  Stethoscope,
+  UsersRound,
+} from "lucide-react";
 
 import { OnboardingTour } from "@/components/onboarding/onboarding-tour";
 import { Badge } from "@/components/ui/badge";
@@ -13,221 +20,264 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { cyberRiskScore } from "@/lib/cyber-hygiene/data";
-import { cyberReadinessSignals } from "@/lib/dashboard/mock-data";
+import { recentActivity } from "@/lib/dashboard/mock-data";
 import { pendingLabs } from "@/lib/dashboard/labs";
-import { getPatientCommandMetrics, getRiskBadgeClass } from "@/lib/patients/command-center";
+import {
+  getPatientCommandMetrics,
+  getRiskBadgeClass,
+} from "@/lib/patients/command-center";
 import { usePatientStore } from "@/lib/stores/patientStore";
 
 export function DashboardOverview() {
-  const { patients, currentPatientId, openPatientWorkspace } = usePatientStore();
+  const { patients, currentPatientId, openPatientWorkspace } =
+    usePatientStore();
   const assignedPatients = patients.slice(0, 5);
-  const providersLoggedIn = 3;
   const currentPatient =
-    patients.find((patient) => patient.id === currentPatientId) ?? patients[0];
+    patients.find((p) => p.id === currentPatientId) ?? patients[0];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <OnboardingTour />
-      <section className="grid gap-4 xl:grid-cols-[1fr_0.85fr]">
-        <Card className="border-primary/20 bg-[linear-gradient(135deg,_hsl(var(--card)),_hsl(var(--secondary)))]">
-          <CardHeader>
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge variant="success">Provider command center</Badge>
-              <Badge variant="outline">Focused daily view</Badge>
-            </div>
-            <CardTitle className="text-3xl">
-              Today: patients, labs, and cyber posture.
-            </CardTitle>
-            <CardDescription className="max-w-3xl text-base leading-7">
-              This overview is intentionally focused: see who is assigned to you,
-              which labs need review, and whether practice cyber hygiene needs attention.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="rounded-xl border bg-card/70 p-4 text-sm">
-            <p className="font-semibold">Current Patient: {currentPatient.name}</p>
-            <p className="mt-1 text-muted-foreground">
-              Open the patient workspace to work inside their chart context.
-            </p>
-            <Button className="mt-3" asChild onClick={() => openPatientWorkspace(currentPatient.id)}>
-              <Link href={`/dashboard/patient/${currentPatient.id}`}>
-                Open current patient
-                <ArrowUpRight />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
 
-        <Card className="border-emerald-200 bg-emerald-50/80 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/30">
-          <CardHeader>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary">
+            Overview
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+            Good morning, Doctor.
+          </h1>
+          <p className="mt-1 max-w-lg text-sm text-muted-foreground">
+            {assignedPatients.length} patients assigned · {pendingLabs.length}{" "}
+            labs pending review
+          </p>
+        </div>
+        <Button asChild onClick={() => openPatientWorkspace(currentPatient.id)}>
+          <Link href={`/dashboard/patient/${currentPatient.id}`}>
+            Open {currentPatient.name.split(" ")[0]}&apos;s chart
+            <ArrowUpRight />
+          </Link>
+        </Button>
+      </div>
+
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          icon={Stethoscope}
+          label="Providers online"
+          value="3"
+          helper="Active sessions across the practice"
+        />
+        <StatCard
+          icon={UsersRound}
+          label="Assigned patients"
+          value={String(assignedPatients.length)}
+          helper="Click a patient below to start"
+        />
+        <StatCard
+          icon={FlaskConical}
+          label="Labs pending"
+          value={String(pendingLabs.length)}
+          helper="Prioritize before starting visits"
+        />
+        <Link href="/dashboard/cyber-hygiene" className="contents">
+          <StatCard
+            icon={ShieldCheck}
+            label="Cyber hygiene score"
+            value={String(cyberRiskScore.score)}
+            helper={`Target: 90+ · ${cyberRiskScore.score >= 90 ? "On track" : `${90 - cyberRiskScore.score} points to go`}`}
+            variant="cyber"
+          />
+        </Link>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <Badge variant="success">Cyber Hygiene</Badge>
-              <ShieldAlert className="size-5 text-emerald-700 dark:text-emerald-300" />
-            </div>
-            <CardTitle>Practice cyber posture</CardTitle>
-            <CardDescription>
-              Security posture stays global, not inside individual patient charts.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div>
-              <div className="flex items-end justify-between">
-                <span className="text-4xl font-semibold text-emerald-700 dark:text-emerald-300">
-                  {cyberRiskScore.score}
-                </span>
-                <span className="text-sm text-muted-foreground">Target: 90+</span>
+              <div className="flex items-center gap-2">
+                <UsersRound className="size-5 text-primary" />
+                <CardTitle>Patients assigned to you</CardTitle>
               </div>
-              <Progress value={cyberRiskScore.score} className="mt-3 bg-emerald-200" />
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/dashboard/patients">View all</Link>
+              </Button>
             </div>
-            <ul className="space-y-2 text-sm">
-              {cyberReadinessSignals.map((signal) => (
-                <li key={signal} className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-emerald-500" />
-                  {signal}
-                </li>
-              ))}
-            </ul>
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/cyber-hygiene">Open Cyber Hygiene</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Stethoscope className="size-5 text-primary" />
-              <CardTitle>Providers logged in</CardTitle>
-            </div>
-            <CardDescription>
-              Active provider sessions across the practice workspace.
-            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-semibold">{providersLoggedIn}</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Demo metric until Supabase presence is connected.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <UsersRound className="size-5 text-primary" />
-              <CardTitle>Assigned patients</CardTitle>
-            </div>
-            <CardDescription>
-              Patients assigned to this provider today.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-semibold">{assignedPatients.length}</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Open the list below to work a patient chart.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <FlaskConical className="size-5 text-primary" />
-              <CardTitle>Labs pending</CardTitle>
-            </div>
-            <CardDescription>
-              Labs waiting for provider review or patient follow-up.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-semibold">{pendingLabs.length}</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Prioritize review before starting visits.
-            </p>
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <UsersRound className="size-5 text-primary" />
-              <CardTitle>Patients assigned to you</CardTitle>
-            </div>
-            <CardDescription>
-              Click a patient to open their workspace.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2">
             {assignedPatients.map((patient) => {
               const metrics = getPatientCommandMetrics(patient);
+              const isCurrent = patient.id === currentPatientId;
 
               return (
                 <Link
                   key={patient.id}
                   href={`/dashboard/patient/${patient.id}`}
                   onClick={() => openPatientWorkspace(patient.id)}
-                  className="flex items-center justify-between gap-3 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/50"
+                  className={
+                    "flex items-center justify-between gap-3 rounded-xl border p-3.5 transition-colors hover:bg-muted/50 " +
+                    (isCurrent
+                      ? "border-primary/30 bg-primary/[0.03]"
+                      : "bg-card")
+                  }
                 >
-                  <div>
-                    <p className="font-medium">{patient.name}</p>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{patient.name}</p>
+                      {isCurrent ? (
+                        <Badge variant="success" className="text-[10px]">
+                          Current
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
                       DOB {patient.dob} · Last visit {patient.lastVisit}
                     </p>
                   </div>
-                  <div className="flex flex-wrap justify-end gap-2">
+                  <div className="flex shrink-0 gap-2">
                     <Badge variant="outline">{metrics.notesCount} notes</Badge>
-                    <Badge variant="outline" className={getRiskBadgeClass(metrics.cyberRisk)}>
+                    <Badge
+                      variant="outline"
+                      className={getRiskBadgeClass(metrics.cyberRisk)}
+                    >
                       {metrics.cyberRisk}
                     </Badge>
                   </div>
                 </Link>
               );
             })}
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/patients">View all patients</Link>
-            </Button>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <FlaskConical className="size-5 text-primary" />
-              <CardTitle>Labs pending review</CardTitle>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FlaskConical className="size-5 text-primary" />
+                <CardTitle>Labs pending review</CardTitle>
+              </div>
+              <Badge variant="secondary">{pendingLabs.length} pending</Badge>
             </div>
-            <CardDescription>
-              Labs that need provider review or patient follow-up.
-            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2">
             {pendingLabs.map((lab) => (
               <Link
                 key={lab.id}
                 href={`/dashboard/patient/${lab.patientId}`}
                 onClick={() => openPatientWorkspace(lab.patientId)}
-                className="block rounded-xl border bg-card p-4 transition-colors hover:bg-muted/50"
+                className="block rounded-xl border bg-card p-3.5 transition-colors hover:bg-muted/50"
               >
-                <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2">
                   <p className="font-medium">{lab.test}</p>
-                  <Badge variant={lab.priority === "Routine" ? "outline" : "secondary"}>
+                  <Badge
+                    variant={
+                      lab.priority === "Routine" ? "outline" : "secondary"
+                    }
+                  >
                     {lab.priority}
                   </Badge>
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {lab.patientName} · {lab.received}
                 </p>
-                <p className="mt-2 text-sm text-muted-foreground">{lab.summary}</p>
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  {lab.summary}
+                </p>
               </Link>
             ))}
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/patients">Open patient work queue</Link>
-            </Button>
           </CardContent>
         </Card>
       </section>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Activity className="size-5 text-primary" />
+            <CardTitle>Recent activity</CardTitle>
+          </div>
+          <CardDescription>
+            Latest actions across the practice workspace.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="divide-y">
+            {recentActivity.map((event) => {
+              const Icon = event.icon;
+              return (
+                <div
+                  key={event.title}
+                  className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
+                >
+                  <span
+                    className={
+                      "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg " +
+                      (event.featured
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"
+                        : "bg-secondary text-muted-foreground")
+                    }
+                  >
+                    <Icon className="size-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{event.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {event.detail}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {event.time}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+type StatCardProps = {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  helper: string;
+  variant?: "default" | "cyber";
+};
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  helper,
+  variant = "default",
+}: StatCardProps) {
+  const isCyber = variant === "cyber";
+
+  return (
+    <div
+      className={
+        "flex items-start gap-4 rounded-2xl border p-4 transition-colors " +
+        (isCyber
+          ? "border-emerald-200 bg-emerald-50/60 hover:bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/50"
+          : "bg-card")
+      }
+    >
+      <span
+        className={
+          "flex size-10 shrink-0 items-center justify-center rounded-xl " +
+          (isCyber
+            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"
+            : "bg-secondary text-muted-foreground")
+        }
+      >
+        <Icon className="size-5" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="mt-0.5 text-2xl font-semibold tracking-tight">{value}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{helper}</p>
+      </div>
     </div>
   );
 }

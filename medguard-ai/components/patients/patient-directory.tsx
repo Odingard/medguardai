@@ -469,109 +469,109 @@ export function PatientDirectory() {
   if (patientWorkspaceOpen && workspacePatient) {
     return (
       <div className="space-y-6">
-        <Card className="border-primary/20 bg-[linear-gradient(135deg,_hsl(var(--card)),_hsl(var(--secondary)))]">
-          <CardHeader>
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge variant="success">Patient Workspace Active</Badge>
-              <Badge variant="outline">{workspacePatient.name}</Badge>
-            </div>
-            <CardTitle className="text-3xl">{workspacePatient.name}&apos;s chart is open</CardTitle>
-            <CardDescription>
-              The Patients tab is not showing the all-patient table because you are inside a patient workspace.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary">
+              Patients
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+              {workspacePatient.name}&apos;s workspace is open
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Close the workspace to return to the full patient directory.
+            </p>
+          </div>
+          <div className="flex gap-2">
             <Button asChild>
-              <Link href={`/dashboard/patient/${workspacePatient.id}`}>Return to patient workspace</Link>
+              <Link href={`/dashboard/patient/${workspacePatient.id}`}>
+                Return to workspace
+              </Link>
             </Button>
             <Button variant="outline" onClick={closePatientWorkspace}>
-              Close Patient / Show All Patients
+              Close &amp; show all patients
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="border-primary/20 bg-[linear-gradient(135deg,_hsl(var(--card)),_hsl(var(--secondary)))]">
-        <CardHeader>
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge variant="success">Patient command center</Badge>
-            <Badge variant="outline">{patients.length} mock patients</Badge>
-            <Badge variant="outline">{selectedPatientIds.length} selected</Badge>
-          </div>
-          <CardTitle className="text-3xl">
-            The central command center for every patient workflow.
-          </CardTitle>
-          <CardDescription className="max-w-3xl text-base leading-7">
-            Search, filter, set the current patient, launch module handoffs, review
-            risk, and simulate EHR Push from one fast workspace.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {recentPatients.length ? (
-            <div className="flex flex-wrap gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
-                Recent patients:
-              </span>
-              {recentPatients.map((patient) => (
-                <Button
-                  key={patient.id}
-                  variant={patient.id === currentPatientId ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setAsCurrentPatient(patient)}
-                >
-                  {patient.name}
-                </Button>
-              ))}
-            </div>
-          ) : null}
-
-          <div className="grid gap-3 lg:grid-cols-[1fr_220px_auto]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search by patient, DOB, reason, last visit..."
-                className="pl-9"
-              />
-            </div>
-            <Select value={filterMode} onValueChange={(value) => setFilterMode(value as FilterMode)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All patients</SelectItem>
-                <SelectItem value="active">Active patient</SelectItem>
-                <SelectItem value="last-visit">By last visit</SelectItem>
-                <SelectItem value="risk">Risk level</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex gap-2">
-              <Button
-                variant={viewMode === "table" ? "default" : "outline"}
-                onClick={() => setViewMode("table")}
-              >
-                <List />
-                Table
-              </Button>
-              <Button
-                variant={viewMode === "cards" ? "default" : "outline"}
-                onClick={() => setViewMode("cards")}
-              >
-                <Grid2X2 />
-                Cards
-              </Button>
-            </div>
-          </div>
-          <p className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
-            {statusMessage}
+    <div className="space-y-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary">
+            Patients
           </p>
-        </CardContent>
-      </Card>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+            Patient directory
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {patients.length} patients · {selectedPatientIds.length} selected
+          </p>
+        </div>
+      </div>
+
+      {recentPatients.length ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">
+            Recent:
+          </span>
+          {recentPatients.map((patient) => (
+            <Button
+              key={patient.id}
+              variant={patient.id === currentPatientId ? "default" : "outline"}
+              size="sm"
+              onClick={() => setAsCurrentPatient(patient)}
+            >
+              {patient.name}
+            </Button>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="grid gap-3 lg:grid-cols-[1fr_220px_auto]">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search by patient, DOB, reason, last visit..."
+            className="pl-9"
+          />
+        </div>
+        <Select value={filterMode} onValueChange={(value) => setFilterMode(value as FilterMode)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Filter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All patients</SelectItem>
+            <SelectItem value="active">Active patient</SelectItem>
+            <SelectItem value="last-visit">By last visit</SelectItem>
+            <SelectItem value="risk">Risk level</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === "table" ? "default" : "outline"}
+            onClick={() => setViewMode("table")}
+          >
+            <List />
+            Table
+          </Button>
+          <Button
+            variant={viewMode === "cards" ? "default" : "outline"}
+            onClick={() => setViewMode("cards")}
+          >
+            <Grid2X2 />
+            Cards
+          </Button>
+        </div>
+      </div>
+
+      <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+        {statusMessage}
+      </p>
 
       <Card className={teamSharingReady ? "border-emerald-300 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/20" : "border-amber-300 bg-amber-50/70 dark:border-amber-900 dark:bg-amber-950/20"}>
         <CardHeader>
@@ -623,13 +623,7 @@ export function PatientDirectory() {
 
       {viewMode === "table" ? (
         <Card>
-          <CardHeader>
-            <CardTitle>Patient table</CardTitle>
-            <CardDescription>
-              Click a row to set the current patient and open their profile.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <Table>
               <TableHeader>
                 <TableRow>

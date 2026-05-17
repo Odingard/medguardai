@@ -1,16 +1,19 @@
 import {
   ClipboardCheck,
-  Clock,
-  Copy,
   CreditCard,
   DatabaseZap,
   FileHeart,
   FileText,
+  Copy,
   LayoutDashboard,
   ShieldCheck,
   UsersRound,
+  Clock,
 } from "lucide-react";
 
+/* ------------------------------------------------------------------ */
+/*  Global sidebar – practice-level navigation (always visible)       */
+/* ------------------------------------------------------------------ */
 export const dashboardNavigation = [
   {
     title: "Overview",
@@ -38,6 +41,9 @@ export const dashboardNavigation = [
   },
 ] as const;
 
+/* ------------------------------------------------------------------ */
+/*  Patient workspace tabs – shown inside the patient workspace only  */
+/* ------------------------------------------------------------------ */
 export const patientWorkspaceTabs = [
   {
     title: "Visit Prep",

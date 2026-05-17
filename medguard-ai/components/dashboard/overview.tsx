@@ -19,7 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { cyberRiskScore } from "@/lib/cyber-hygiene/data";
+import { cyberRiskScore, recentAlerts } from "@/lib/cyber-hygiene/data";
 import { recentActivity } from "@/lib/dashboard/mock-data";
 import { pendingLabs } from "@/lib/dashboard/labs";
 import {
@@ -136,13 +136,24 @@ export function DashboardOverview() {
           helper="Prioritize before starting visits"
         />
         <Link href="/dashboard/cyber-hygiene" className="contents">
-          <StatCard
-            icon={ShieldCheck}
-            label="Cyber hygiene score"
-            value={String(cyberRiskScore.score)}
-            helper={`Target: 90+ · ${cyberRiskScore.score >= 90 ? "On track" : `${90 - cyberRiskScore.score} points to go`}`}
-            variant="cyber"
-          />
+          <div className="flex items-start gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 transition-colors hover:bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/50">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+              <ShieldCheck className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">
+                Cyber hygiene score
+              </p>
+              <p className="mt-0.5 text-2xl font-semibold tracking-tight">
+                {cyberRiskScore.score}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {recentAlerts[0]
+                  ? `⚠ ${recentAlerts[0].severity === "critical" ? "Critical" : "Action needed"}: ${recentAlerts[0].actionTaken}`
+                  : `Target: 90+ · ${90 - cyberRiskScore.score} points to go`}
+              </p>
+            </div>
+          </div>
         </Link>
       </section>
 

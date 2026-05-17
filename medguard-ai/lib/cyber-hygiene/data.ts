@@ -3,21 +3,16 @@ import {
   Bot,
   CheckCircle2,
   FileCheck2,
-  KeyRound,
   MailWarning,
   Radar,
   ShieldCheck,
-  ShieldQuestion,
   Siren,
-  UserCheck,
 } from "lucide-react";
 
 export type RiskLevel = "low" | "medium" | "high";
 export type AlertSeverity = "critical" | "high" | "medium" | "low";
 export type AgentId =
   | "domain-breach-monitor"
-  | "weak-password-detector"
-  | "phishing-simulation-runner"
   | "weekly-compliance-report-generator";
 
 export const cyberRiskScore = {
@@ -40,25 +35,7 @@ export const cyberMetrics = [
     progress: 72,
   },
   {
-    title: "Password Health",
-    value: "91%",
-    detail: "strong credential posture",
-    helper: "3 weak passwords flagged",
-    status: "low" as RiskLevel,
-    icon: KeyRound,
-    progress: 91,
-  },
-  {
-    title: "Phishing Readiness",
-    value: "78%",
-    detail: "staff simulation score",
-    helper: "2 users need coaching",
-    status: "medium" as RiskLevel,
-    icon: UserCheck,
-    progress: 78,
-  },
-  {
-    title: "Compliance Status",
+    title: "HIPAA Compliance",
     value: "88%",
     detail: "HIPAA basics complete",
     helper: "1 missing policy attestation",
@@ -81,28 +58,6 @@ export const cyberAgents = [
     icon: Radar,
   },
   {
-    id: "weak-password-detector" as AgentId,
-    name: "Weak Password Detector",
-    description:
-      "Looks for weak credential patterns and staff accounts missing MFA.",
-    enabled: true,
-    cadence: "Daily",
-    lastRun: "7:30 AM",
-    result: "3 weak passwords flagged",
-    icon: KeyRound,
-  },
-  {
-    id: "phishing-simulation-runner" as AgentId,
-    name: "Phishing Simulation Runner",
-    description:
-      "Runs safe mock phishing checks and tracks staff coaching opportunities.",
-    enabled: false,
-    cadence: "Monthly",
-    lastRun: "Friday",
-    result: "78% staff readiness score",
-    icon: ShieldQuestion,
-  },
-  {
     id: "weekly-compliance-report-generator" as AgentId,
     name: "Weekly Compliance Report Generator",
     description:
@@ -123,12 +78,6 @@ export const agentActivity = [
     icon: AlertTriangle,
   },
   {
-    time: "7:30 AM",
-    agent: "Weak Password Detector",
-    detail: "Flagged 3 passwords for rotation and MFA verification.",
-    icon: KeyRound,
-  },
-  {
     time: "Monday",
     agent: "Weekly Compliance Report Generator",
     detail: "Prepared security posture summary for practice leadership.",
@@ -143,13 +92,7 @@ export const recentAlerts = [
     description:
       "Front desk mailbox found in third-party breach corpus; password reset recommended.",
     actionTaken: "Rotation task created",
-  },
-  {
-    date: "May 16, 2026",
-    severity: "medium" as AlertSeverity,
-    description:
-      "Two staff members clicked training simulation link during phishing readiness run.",
-    actionTaken: "Coaching assigned",
+    staffEmail: "frontdesk@ridgewayfamilycare.example",
   },
   {
     date: "May 15, 2026",
@@ -157,6 +100,7 @@ export const recentAlerts = [
     description:
       "Weekly HIPAA security policy attestation missing one provider signature.",
     actionTaken: "Reminder sent",
+    staffEmail: "maya.chen@ridgewayfamilycare.example",
   },
   {
     date: "May 14, 2026",
@@ -164,6 +108,7 @@ export const recentAlerts = [
     description:
       "Legacy shared admin account detected without MFA on billing workstation.",
     actionTaken: "Admin notified",
+    staffEmail: null,
   },
 ] as const;
 
@@ -179,12 +124,6 @@ export const recommendations = [
     priority: "High",
     impact: "Closes the most common small-practice account takeover path.",
     icon: ShieldCheck,
-  },
-  {
-    title: "Run targeted phishing coaching for two staff members",
-    priority: "Medium",
-    impact: "Improves staff readiness without touching PHI.",
-    icon: UserCheck,
   },
   {
     title: "Collect missing HIPAA security policy attestation",
@@ -225,7 +164,7 @@ export function simulateCyberScan() {
   return {
     completedAt: "Just now",
     summary:
-      "Simulated scan complete: no new critical findings, 4 recommendations remain open.",
+      "Simulated scan complete: no new critical findings, 3 recommendations remain open.",
   };
 }
 

@@ -8,12 +8,10 @@ import {
   ArrowUpRight,
   CheckCircle2,
   Clock3,
-  Lock,
   Play,
   RefreshCw,
   Shield,
   ShieldCheck,
-  Sparkles,
   Zap,
 } from "lucide-react";
 
@@ -36,6 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { PracticeRole } from "@/lib/auth/session";
 import {
   agentActivity,
   cyberAgents,
@@ -50,10 +49,12 @@ import {
   type AlertSeverity,
   type RiskLevel,
 } from "@/lib/cyber-hygiene/data";
-import { getPatientCommandMetrics, getRiskBadgeClass } from "@/lib/patients/command-center";
-import { usePatientStore } from "@/lib/stores/patientStore";
-import { useSubscriptionStore } from "@/lib/stores/subscriptionStore";
 import { cn } from "@/lib/utils";
+
+type CyberHygieneDashboardProps = {
+  role: PracticeRole;
+  userEmail: string;
+};
 
 const severityStyles: Record<AlertSeverity, string> = {
   critical:
@@ -70,14 +71,161 @@ const metricStyles: Record<RiskLevel, string> = {
   high: "bg-red-500",
 };
 
-export function CyberHygieneDashboard() {
-  const { patients, currentPatientId } = usePatientStore();
-  const hasAdvancedCyber = useSubscriptionStore((state) =>
-    state.hasFeature("advancedCyber"),
+export function CyberHygieneDashboard({
+  role,
+  userEmail,
+}: CyberHygieneDashboardProps) {
+  if (role === "admin") {
+    return <AdminDashboard />;
+  }
+
+  return <ProviderChecklist userEmail={userEmail} />;
+}
+
+function ProviderChecklist({ userEmail }: { userEmail: string }) {
+  const myAlerts = recentAlerts.filter((alert) => alert.staffEmail === userEmail);
+  const needsAttestation = myAlerts.some((alert) =>
+    alert.description.toLowerCase().includes("attestation"),
   );
-  const currentPatient =
-    patients.find((patient) => patient.id === currentPatientId) ?? patients[0];
-  const patientMetrics = getPatientCommandMetrics(currentPatient);
+  const myRecommendations = recommendations.filter(
+    (recommendation) =>
+      recommendation.title.toLowerCase().includes("attestation") ||
+      myAlerts.some((alert) =>
+        alert.description
+          .toLowerCase()
+          .includes(recommendation.title.split(" ")[1]?.toLowerCase() ?? ""),
+      ),
+  );
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="size-5 text-emerald-600" />
+            <CardTitle>Your security status</CardTitle>
+          </div>
+          <CardDescription>
+            Items that need your attention. Practice-wide posture is managed by your admin.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {myAlerts.length === 0 ? (
+            <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 dark:border-emerald-900 dark:bg-emerald-950/30">
+              <CheckCircle2 className="size-5 text-emerald-600" />
+              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                You&apos;re all clear — no action items right now.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {myAlerts.length} item{myAlerts.length > 1 ? "s" : ""} need your attention:
+              </p>
+              {myAlerts.map((alert) => (
+                <div
+                  key={`${alert.date}-${alert.description}`}
+                  className={cn("rounded-xl border p-4", severityStyles[alert.severity])}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge variant="outline" className={cn("capitalize", severityStyles[alert.severity])}>
+                      {alert.severity}
+                    </Badge>
+                    <span className="text-xs">{alert.date}</span>
+                  </div>
+                  <p className="mt-2 text-sm">{alert.description}</p>
+                  <p className="mt-1 text-xs opacity-80">Status: {alert.actionTaken}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>HIPAA compliance</CardTitle>
+          <CardDescription>Required documents and attestations for your account.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <ComplianceRow
+            title="HIPAA Security Policy Attestation"
+            description="Annual acknowledgment of practice security policies"
+            complete={!needsAttestation}
+            incompleteLabel="Signature needed"
+          />
+          <ComplianceRow
+            title="HIPAA Privacy Notice"
+            description="Acknowledgment of privacy practices"
+            complete
+          />
+        </CardContent>
+      </Card>
+
+      {myRecommendations.length ? (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle>Your recommended actions</CardTitle>
+            <CardDescription>Personal checklist items derived from your alerts.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {myRecommendations.map((recommendation) => {
+              const Icon = recommendation.icon;
+              return (
+                <div key={recommendation.title} className="rounded-xl border p-4">
+                  <div className="flex items-start gap-3">
+                    <Icon className="mt-0.5 size-4 text-primary" />
+                    <div>
+                      <p className="font-medium">{recommendation.title}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{recommendation.impact}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <div className="rounded-xl border bg-muted/40 p-4 text-center text-sm text-muted-foreground">
+        Practice-wide breach monitoring, agent controls, and full security posture are visible to your practice administrator.
+      </div>
+    </div>
+  );
+}
+
+function ComplianceRow({
+  title,
+  description,
+  complete,
+  incompleteLabel = "Needed",
+}: {
+  title: string;
+  description: string;
+  complete: boolean;
+  incompleteLabel?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border p-3.5">
+      <div>
+        <p className="font-medium">{title}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </div>
+      <Badge
+        variant="outline"
+        className={
+          complete
+            ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+            : "border-amber-300 bg-amber-50 text-amber-700"
+        }
+      >
+        {complete ? "Complete" : incompleteLabel}
+      </Badge>
+    </div>
+  );
+}
+
+function AdminDashboard() {
   const [riskScore, setRiskScore] = useState(cyberRiskScore.score);
   const [riskTrend, setRiskTrend] = useState(cyberRiskScore.trend);
   const [lastScanned, setLastScanned] = useState(cyberRiskScore.lastScanned);
@@ -105,24 +253,17 @@ export function CyberHygieneDashboard() {
     setRiskScore(nextScore);
     setRiskTrend(`+${nextScore - cyberRiskScore.score} points after latest scan`);
     setLastScanned(scanResult.completedAt);
-    setScanMessage(
-      `${scanResult.summary} Current patient context: ${currentPatient.name} has ${patientMetrics.cyberRisk.toLowerCase()} patient-level cyber risk (${patientMetrics.cyberScore}/100).`,
-    );
+    setScanMessage(scanResult.summary);
   }
 
   function handleRunAgent(agentId: AgentId, agentName: string) {
     setRunningAgent(agentId);
-    setAgentRunMessage(
-      `${simulateAgentRun(agentName)} Patient context: ${currentPatient.name}.`,
-    );
+    setAgentRunMessage(simulateAgentRun(agentName));
     window.setTimeout(() => setRunningAgent(null), 600);
   }
 
   function handleToggleAgent(agentId: AgentId, enabled: boolean, agentName: string) {
-    setAgentToggles((current) => ({
-      ...current,
-      [agentId]: enabled,
-    }));
+    setAgentToggles((current) => ({ ...current, [agentId]: enabled }));
     setAgentRunMessage(
       `${agentName} ${enabled ? "enabled" : "disabled"} for practice monitoring.`,
     );
@@ -136,7 +277,7 @@ export function CyberHygieneDashboard() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <Badge variant="success" className="gap-1">
                 <ShieldCheck className="size-3" />
-                Cyber Hygiene command center
+                Admin · Cyber Hygiene
               </Badge>
               <Badge variant="outline" className={riskTone.className}>
                 {riskTone.label}
@@ -151,23 +292,15 @@ export function CyberHygieneDashboard() {
                   }}
                 />
                 <div className="relative flex size-36 flex-col items-center justify-center rounded-full bg-card">
-                  <span className="text-5xl font-semibold">
-                    {riskScore}
-                  </span>
-                  <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
-                    score
-                  </span>
+                  <span className="text-5xl font-semibold">{riskScore}</span>
+                  <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground">score</span>
                 </div>
               </div>
               <div className="space-y-5">
                 <div>
-                  <CardTitle className="text-3xl">
-                    Overall risk score
-                  </CardTitle>
+                  <CardTitle className="text-3xl">Overall risk score</CardTitle>
                   <CardDescription className="mt-3 text-base leading-7">
-                    Color-coded 0-100 posture score covering breach exposure,
-                    password health, phishing readiness, and HIPAA security
-                    basics.
+                    Composite score covering breach exposure and HIPAA compliance basics across the practice.
                   </CardDescription>
                 </div>
                 <div className="space-y-2">
@@ -175,13 +308,8 @@ export function CyberHygieneDashboard() {
                     <span className="text-muted-foreground">Last scanned</span>
                     <span className="font-medium">{lastScanned}</span>
                   </div>
-                  <Progress
-                    value={riskScore}
-                    indicatorClassName={riskTone.progressClassName}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    {riskTrend}
-                  </p>
+                  <Progress value={riskScore} indicatorClassName={riskTone.progressClassName} />
+                  <p className="text-sm text-muted-foreground">{riskTrend}</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Button onClick={handleScanNow}>
@@ -199,198 +327,95 @@ export function CyberHygieneDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-xl border bg-card/80 p-4 text-sm text-muted-foreground">
-              {scanMessage}
-            </div>
+            <div className="rounded-xl border bg-card/80 p-4 text-sm text-muted-foreground">{scanMessage}</div>
           </CardContent>
         </Card>
 
-        <Card className="border-primary/20">
-          <CardHeader>
-            <CardTitle>Patient cyber context</CardTitle>
-            <CardDescription>
-              Patient-specific risk is contextual and does not require PHI for MVP testing.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-xl border bg-card p-4">
-              <p className="font-semibold">Current Patient: {currentPatient.name}</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {currentPatient.reason} · Last visit {currentPatient.lastVisit}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className={getRiskBadgeClass(patientMetrics.cyberRisk)}>
-                {patientMetrics.cyberRisk} risk · {patientMetrics.cyberScore}/100
-              </Badge>
-              <Badge variant="outline">
-                {patientMetrics.intakePending ? "Intake pending" : "Intake clear"}
-              </Badge>
-              <Badge variant="outline">{patientMetrics.notesCount} notes</Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card id="agentic-ai-mcps" className="border-primary/20">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Sparkles className="size-5 text-primary" />
-              <CardTitle>Agentic AI + MCP roadmap</CardTitle>
-            </div>
-            <CardDescription>
-              Built for safe early testing without PHI, with connectors planned
-              for breach intelligence, device posture, email security, and
-              compliance evidence.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-xl border bg-muted/40 p-4">
-              <p className="text-sm font-semibold">
-                Marketing hook: cybersecurity leadership for medical practices
-              </p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Position this module as the bridge between small-practice
-                operations and practical security workflows: no PHI needed,
-                clear value, and strong founder-market credibility.
-              </p>
-            </div>
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/cyber-hygiene">
-                Future cyber startup link placeholder
-                <ArrowUpRight />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          {cyberMetrics.map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <Card key={metric.title}>
+                <CardContent className="flex items-start gap-4 pt-6">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
+                    <Icon className="size-5" />
+                  </span>
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold">{metric.title}</h3>
+                      <Badge
+                        variant="outline"
+                        className={
+                          metric.status === "low"
+                            ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                            : metric.status === "medium"
+                              ? "border-amber-300 bg-amber-50 text-amber-700"
+                              : "border-red-300 bg-red-50 text-red-700"
+                        }
+                      >
+                        {metric.status}
+                      </Badge>
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <span className="text-3xl font-semibold">{metric.value}</span>
+                      <span className="text-sm text-muted-foreground">{metric.detail}</span>
+                    </div>
+                    <Progress value={metric.progress} indicatorClassName={metricStyles[metric.status]} />
+                    <p className="text-xs text-muted-foreground">{metric.helper}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {cyberMetrics.map((metric) => {
-          const Icon = metric.icon;
-
-          return (
-            <Card key={metric.title} className="hover:border-primary/40">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                <CardDescription>{metric.title}</CardDescription>
-                <span className="rounded-lg bg-secondary p-2 text-secondary-foreground">
-                  <Icon className="size-4" />
-                </span>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-end gap-2">
-                  <span className="text-3xl font-semibold">
-                    {metric.value}
-                  </span>
-                  <span className="pb-1 text-sm text-muted-foreground">
-                    {metric.detail}
-                  </span>
-                </div>
-                <Progress
-                  value={metric.progress}
-                  className="mt-4"
-                  indicatorClassName={metricStyles[metric.status]}
-                />
-                <p className="mt-3 text-sm text-muted-foreground">
-                  {metric.helper}
-                </p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]" id="agentic-ai-mcps">
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               <Zap className="size-5 text-primary" />
-              <CardTitle>Agentic AI agents</CardTitle>
+              <CardTitle>Agentic AI & MCPs</CardTitle>
             </div>
-            <CardDescription>
-              Toggle autonomous agents, run mock checks, and later connect each
-              agent to real MCP-backed tools.
-            </CardDescription>
+            <CardDescription>Autonomous agents that monitor the practice and surface findings.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             {cyberAgents.map((agent) => {
               const Icon = agent.icon;
               const isRunning = runningAgent === agent.id;
-              const isAdvancedAgent = [
-                "phishing-simulation-runner",
-                "weekly-compliance-report-generator",
-              ].includes(agent.id);
-              const locked = isAdvancedAgent && !hasAdvancedCyber;
 
               return (
-                <div
-                  key={agent.id}
-                  className="grid gap-4 rounded-xl border bg-card p-4 md:grid-cols-[1fr_auto] md:items-center"
-                >
-                  <div className="flex gap-4">
-                    <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
+                <div key={agent.id} className="flex flex-col gap-4 rounded-xl border bg-card p-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex gap-3">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
                       <Icon className="size-5" />
                     </span>
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-semibold">{agent.name}</h3>
                         <Badge variant="outline">{agent.cadence}</Badge>
-                        {locked ? <Badge variant="outline">Premium+</Badge> : null}
                       </div>
-                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                        {agent.description}
-                      </p>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">{agent.description}</p>
                       <p className="mt-2 text-sm">
-                        <span className="text-muted-foreground">
-                          Last run:
-                        </span>{" "}
-                        {agent.lastRun} · {agent.result}
+                        <span className="text-muted-foreground">Last run:</span> {agent.lastRun} · {agent.result}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 md:justify-end">
                     <Switch
                       checked={agentToggles[agent.id]}
-                      disabled={locked}
-                      onCheckedChange={(checked) =>
-                        handleToggleAgent(agent.id, checked, agent.name)
-                      }
+                      onCheckedChange={(checked) => handleToggleAgent(agent.id, checked, agent.name)}
                       aria-label={`Toggle ${agent.name}`}
                     />
-                    <Button
-                      variant={locked ? "outline" : "default"}
-                      size="sm"
-                      asChild={locked}
-                      onClick={locked ? undefined : () => handleRunAgent(agent.id, agent.name)}
-                    >
-                      {locked ? (
-                        <Link href="/dashboard/billing">
-                          <Lock />
-                          Upgrade
-                        </Link>
-                      ) : (
-                        <>
-                          {isRunning ? (
-                            <RefreshCw className="animate-spin" />
-                          ) : (
-                            <Play />
-                          )}
-                          Run Agent
-                        </>
-                      )}
+                    <Button size="sm" onClick={() => handleRunAgent(agent.id, agent.name)}>
+                      {isRunning ? <RefreshCw className="animate-spin" /> : <Play />}
+                      Run Agent
                     </Button>
                   </div>
                 </div>
               );
             })}
-            {!hasAdvancedCyber ? (
-              <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
-                Advanced Agentic Cyber agents require Premium or SMB. Upgrade in
-                Billing to unlock phishing simulations and weekly compliance reports.
-              </div>
-            ) : null}
-            <div className="rounded-xl border bg-muted/40 p-4 text-sm text-muted-foreground">
-              {agentRunMessage}
-            </div>
+            <div className="rounded-xl border bg-muted/40 p-4 text-sm text-muted-foreground">{agentRunMessage}</div>
           </CardContent>
         </Card>
 
@@ -400,14 +425,10 @@ export function CyberHygieneDashboard() {
               <Activity className="size-5 text-primary" />
               <CardTitle>Recent agent activity</CardTitle>
             </div>
-            <CardDescription>
-              Mock activity log showing how autonomous agents report back.
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             {agentActivity.map((activity) => {
               const Icon = activity.icon;
-
               return (
                 <div key={`${activity.time}-${activity.agent}`} className="flex gap-4">
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
@@ -421,9 +442,7 @@ export function CyberHygieneDashboard() {
                         {activity.time}
                       </span>
                     </div>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {activity.detail}
-                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">{activity.detail}</p>
                   </div>
                 </div>
               );
@@ -439,9 +458,7 @@ export function CyberHygieneDashboard() {
               <AlertTriangle className="size-5 text-primary" />
               <CardTitle>Recent alerts</CardTitle>
             </div>
-            <CardDescription>
-              Security and compliance events with the action already taken.
-            </CardDescription>
+            <CardDescription>Security and compliance events with actions taken.</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -456,23 +473,14 @@ export function CyberHygieneDashboard() {
               <TableBody>
                 {recentAlerts.map((alert) => (
                   <TableRow key={`${alert.date}-${alert.description}`}>
-                    <TableCell className="whitespace-nowrap font-medium">
-                      {alert.date}
-                    </TableCell>
+                    <TableCell className="whitespace-nowrap font-medium">{alert.date}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={cn("capitalize", severityStyles[alert.severity])}
-                      >
+                      <Badge variant="outline" className={cn("capitalize", severityStyles[alert.severity])}>
                         {alert.severity}
                       </Badge>
                     </TableCell>
-                    <TableCell className="min-w-[280px] text-muted-foreground">
-                      {alert.description}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {alert.actionTaken}
-                    </TableCell>
+                    <TableCell className="min-w-[280px] text-muted-foreground">{alert.description}</TableCell>
+                    <TableCell className="whitespace-nowrap">{alert.actionTaken}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -486,43 +494,29 @@ export function CyberHygieneDashboard() {
               <Shield className="size-5 text-primary" />
               <CardTitle>Recommendations</CardTitle>
             </div>
-            <CardDescription>
-              Actionable next steps sized for a small medical practice.
-            </CardDescription>
+            <CardDescription>Actionable next steps sized for a small medical practice.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {recommendations.map((recommendation) => {
               const Icon = recommendation.icon;
-
               return (
-                <div
-                  key={recommendation.title}
-                  className="rounded-xl border bg-card p-4"
-                >
+                <div key={recommendation.title} className="rounded-xl border bg-card p-4">
                   <div className="flex gap-3">
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
                       <Icon className="size-4" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="font-semibold">
-                          {recommendation.title}
-                        </h3>
-                        <Badge variant="outline">
-                          {recommendation.priority}
-                        </Badge>
+                        <h3 className="font-semibold">{recommendation.title}</h3>
+                        <Badge variant="outline">{recommendation.priority}</Badge>
                       </div>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                        {recommendation.impact}
-                      </p>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">{recommendation.impact}</p>
                     </div>
                   </div>
                   <Button
                     className="mt-4 w-full"
                     variant="outline"
-                    onClick={() =>
-                      setAgentRunMessage(`Created mock remediation task: ${recommendation.title}`)
-                    }
+                    onClick={() => setAgentRunMessage(`Created mock remediation task: ${recommendation.title}`)}
                   >
                     <CheckCircle2 />
                     Fix Now

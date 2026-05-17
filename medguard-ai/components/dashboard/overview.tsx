@@ -29,9 +29,27 @@ import {
 import { usePatientStore } from "@/lib/stores/patientStore";
 
 const activeProviders = [
-  { id: "prov-001", name: "Dr. Maya Chen", role: "Family Medicine" },
-  { id: "prov-002", name: "Dr. James Okafor", role: "Internal Medicine" },
-  { id: "prov-003", name: "NP Sarah Lin", role: "Nurse Practitioner" },
+  {
+    id: "prov-001",
+    name: "Dr. Maya Chen",
+    initials: "MC",
+    role: "Family Medicine",
+    status: "Charting",
+  },
+  {
+    id: "prov-002",
+    name: "Dr. James Okafor",
+    initials: "JO",
+    role: "Internal Medicine",
+    status: "Reviewing labs",
+  },
+  {
+    id: "prov-003",
+    name: "NP Sarah Lin",
+    initials: "SL",
+    role: "Nurse Practitioner",
+    status: "In visit",
+  },
 ] as const;
 
 export function DashboardOverview() {
@@ -57,28 +75,52 @@ export function DashboardOverview() {
       </div>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="flex items-start gap-4 rounded-2xl border bg-card p-4">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-muted-foreground">
-            <Stethoscope className="size-5" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-muted-foreground">
-              Providers online
-            </p>
-            <p className="mt-0.5 text-2xl font-semibold tracking-tight">
-              {activeProviders.length}
-            </p>
-            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
-              {activeProviders.map((provider) => (
-                <span
-                  key={provider.id}
-                  className="text-xs text-muted-foreground"
-                >
-                  {provider.name}
+        <div className="rounded-2xl border bg-card p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">
+                Providers online
+              </p>
+              <div className="mt-1 flex items-end gap-2">
+                <p className="text-3xl font-semibold tracking-tight">
+                  {activeProviders.length}
+                </p>
+                <span className="pb-1 text-xs text-emerald-600 dark:text-emerald-300">
+                  live now
                 </span>
-              ))}
+              </div>
             </div>
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-muted-foreground">
+              <Stethoscope className="size-5" />
+            </span>
           </div>
+
+          <div className="mt-4 space-y-2">
+            {activeProviders.map((provider) => (
+              <div
+                key={provider.id}
+                className="flex items-center gap-3 rounded-xl bg-secondary/50 p-2"
+              >
+                <span className="relative flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                  {provider.initials}
+                  <span className="absolute -right-0.5 -top-0.5 size-3 rounded-full border-2 border-card bg-emerald-500" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{provider.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {provider.role}
+                  </p>
+                </div>
+                <span className="rounded-full bg-background px-2 py-1 text-[10px] font-medium text-muted-foreground">
+                  {provider.status}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-3 rounded-lg border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+            Team handoff: 2 notes drafting · 1 lab review in progress
+          </p>
         </div>
 
         <StatCard

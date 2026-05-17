@@ -3,7 +3,6 @@
 import Link from "next/link";
 import {
   Activity,
-  ArrowUpRight,
   FlaskConical,
   ShieldCheck,
   Stethoscope,
@@ -29,45 +28,59 @@ import {
 } from "@/lib/patients/command-center";
 import { usePatientStore } from "@/lib/stores/patientStore";
 
+const activeProviders = [
+  { id: "prov-001", name: "Dr. Maya Chen", role: "Family Medicine" },
+  { id: "prov-002", name: "Dr. James Okafor", role: "Internal Medicine" },
+  { id: "prov-003", name: "NP Sarah Lin", role: "Nurse Practitioner" },
+] as const;
+
 export function DashboardOverview() {
   const { patients, currentPatientId, openPatientWorkspace } =
     usePatientStore();
   const assignedPatients = patients.slice(0, 5);
-  const currentPatient =
-    patients.find((p) => p.id === currentPatientId) ?? patients[0];
 
   return (
     <div className="space-y-6">
       <OnboardingTour />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary">
-            Overview
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-            Good morning, Doctor.
-          </h1>
-          <p className="mt-1 max-w-lg text-sm text-muted-foreground">
-            {assignedPatients.length} patients assigned · {pendingLabs.length}{" "}
-            labs pending review
-          </p>
-        </div>
-        <Button asChild onClick={() => openPatientWorkspace(currentPatient.id)}>
-          <Link href={`/dashboard/patient/${currentPatient.id}`}>
-            Open {currentPatient.name.split(" ")[0]}&apos;s chart
-            <ArrowUpRight />
-          </Link>
-        </Button>
+      <div>
+        <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary">
+          Overview
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+          Good morning, Doctor.
+        </h1>
+        <p className="mt-1 max-w-lg text-sm text-muted-foreground">
+          {assignedPatients.length} patients assigned · {pendingLabs.length}{" "}
+          labs pending review
+        </p>
       </div>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          icon={Stethoscope}
-          label="Providers online"
-          value="3"
-          helper="Active sessions across the practice"
-        />
+        <div className="flex items-start gap-4 rounded-2xl border bg-card p-4">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-muted-foreground">
+            <Stethoscope className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-muted-foreground">
+              Providers online
+            </p>
+            <p className="mt-0.5 text-2xl font-semibold tracking-tight">
+              {activeProviders.length}
+            </p>
+            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
+              {activeProviders.map((provider) => (
+                <span
+                  key={provider.id}
+                  className="text-xs text-muted-foreground"
+                >
+                  {provider.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <StatCard
           icon={UsersRound}
           label="Assigned patients"
